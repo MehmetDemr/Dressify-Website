@@ -96,6 +96,98 @@
   color: var(--text-gray);
 }
 
+/* ── Social Buttons ─────────────────────────────── */
+
+.auth-socials {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.auth-btn--social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dark);
+  border: 1px solid rgba(17, 17, 17, 0.12) !important;
+  margin-top: 0 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 500 !important;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease !important;
+}
+
+.auth-btn--social::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(201, 169, 110, 0.06) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.auth-btn--social:hover {
+  background: var(--white) !important;
+  border-color: rgba(201, 169, 110, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(201, 169, 110, 0.12);
+  color: var(--dark) !important;
+  transform: translateY(-1px) !important;
+}
+
+.auth-btn--social:hover::before {
+  opacity: 1;
+}
+
+.auth-btn--social svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Divider ────────────────────────────────────── */
+
+.auth-divider {
+  position: relative;
+  text-align: center;
+  margin: 18px 0 24px;
+  color: var(--text-gray);
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 34%;
+  height: 1px;
+  background: rgba(17, 17, 17, 0.1);
+}
+
+.auth-divider::before {
+  left: 0;
+}
+
+.auth-divider::after {
+  right: 0;
+}
+
+/* ── Form ───────────────────────────────────────── */
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -142,6 +234,118 @@
   box-shadow: 0 0 0 4px rgba(201, 169, 110, 0.08);
   background: var(--white);
 }
+
+/* ── Gender Select ──────────────────────────────── */
+
+.auth-select {
+  width: 100%;
+  height: 54px;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0 42px 0 18px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--dark);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+
+  /* Custom chevron arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.auth-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201, 169, 110, 0.08);
+  background-color: var(--white);
+}
+
+.auth-select option {
+  color: var(--dark);
+  background: #ffffff;
+}
+
+/* Default/placeholder option */
+.auth-select option[value=""] {
+  color: #999999;
+}
+
+/* ── Gender Radio Chips ─────────────────────────── */
+
+.auth-gender-chips {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-gender-chip {
+  flex: 1;
+  position: relative;
+}
+
+.auth-gender-chip input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.auth-gender-chip label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 54px;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  background: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.auth-gender-chip label svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.auth-gender-chip label:hover {
+  border-color: rgba(201, 169, 110, 0.5);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--dark);
+}
+
+.auth-gender-chip input[type="radio"]:checked + label {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.07);
+  color: var(--dark);
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.12);
+}
+
+.auth-gender-chip input[type="radio"]:checked + label svg {
+  opacity: 1;
+}
+
+/* ── Misc ────────────────────────────────────────── */
 
 .auth-row {
   display: flex;
@@ -228,6 +432,24 @@
   color: var(--gold);
 }
 
+.auth-message {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: var(--font-body);
+}
+
+.auth-message--error {
+  color: #c84b4b;
+}
+
+.auth-message--success {
+  color: #2f8f5b;
+}
+
+/* ── Responsive ─────────────────────────────────── */
+
 @media (max-width: 992px) {
   .auth-shell {
     grid-template-columns: 1fr;
@@ -260,4 +482,38 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .auth-gender-chips {
+    flex-wrap: wrap;
+  }
+
+  .auth-gender-chip {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+
+  .auth-gender-chip:last-child:nth-child(odd) {
+    flex: 1 1 100%;
+  }
+}
+
+
+.auth-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-gray);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0;
+  margin-bottom: 20px;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+.auth-back-btn:hover {
+  color: var(--gold);
 }

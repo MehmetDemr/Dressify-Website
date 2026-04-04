@@ -1,1 +1,1 @@
-export const API_BASE_URL = "http://51.21.2.31:3000/api";
+export const API_BASE_URL = "https://dressify-shop.com/api";

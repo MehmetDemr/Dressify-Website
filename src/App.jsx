@@ -3,6 +3,8 @@ import HomePage from "./pages/HomePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import BrandPage from "./pages/Brand";
+import CategoryPage from "./pages/Category";
 
 function App() {
   return (
@@ -16,6 +18,13 @@ function App() {
         <Route path="/register" element={<Register />} />
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+
+        <Route path="/dashboard/:brandSlug" element={<BrandPage />} />
+
+        <Route
+          path="/dashboard/:brandSlug/:categorySlug"
+          element={<CategoryPage />}
+        />
       </Routes>
     </BrowserRouter>
   );

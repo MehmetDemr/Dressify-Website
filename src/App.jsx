@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import BrandPage from "./pages/Brand";
 import CategoryPage from "./pages/Category";
 import ProfilePage from "./pages/Profile";
+import FavoritesPage from "./pages/Favourite";
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         />
 
         <Route path="/dashboard/profile" element={<ProfilePage />} />
+
+        <Route path="/dashboard/favourite" element={<FavoritesPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -6,6 +6,7 @@ import "../styles/Dashboard.css";
 
 function ProductCard({ product, categories, brands }) {
   const [liked, setLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
@@ -24,12 +25,49 @@ function ProductCard({ product, categories, brands }) {
     (brand) => String(brand.id) === String(matchedCategory?.brand_id),
   );
 
-const detailUrl =
-  matchedBrand?.brandSlug &&
-  matchedCategory?.categorySlug &&
-  product.productSlug
-    ? `/dashboard/${matchedBrand.brandSlug}/${matchedCategory.categorySlug}/${product.productSlug}`
-    : null;
+  const detailUrl =
+    matchedBrand?.brandSlug &&
+    matchedCategory?.categorySlug &&
+    product.productSlug
+      ? `/dashboard/${matchedBrand.brandSlug}/${matchedCategory.categorySlug}/${product.productSlug}`
+      : null;
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    if (isLiking) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Favorilere eklemek için giriş yapmalısınız.");
+      return;
+    }
+
+    try {
+      setIsLiking(true);
+      const response = await fetch(`${API_BASE_URL}/favourite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setLiked(!liked);
+      } else {
+        console.error("Favori işlemi başarısız:", data.message);
+      }
+    } catch (error) {
+      console.error("İstek hatası:", error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   return (
     <div className="product-card">
@@ -51,8 +89,13 @@ const detailUrl =
         <button
           type="button"
           className={`product-like ${liked ? "liked" : ""}`}
-          onClick={() => setLiked((prev) => !prev)}
+          onClick={handleLike}
+          disabled={isLiking}
           aria-label="Favoriye ekle"
+          style={{
+            color: liked ? "#ff4d4f" : "inherit",
+            cursor: isLiking ? "not-allowed" : "pointer",
+          }}
         >
           <svg
             width="14"

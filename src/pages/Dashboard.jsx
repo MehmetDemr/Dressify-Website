@@ -28,7 +28,7 @@ const detailUrl =
   matchedBrand?.brandSlug &&
   matchedCategory?.categorySlug &&
   product.productSlug
-    ? `/${matchedBrand.brandSlug}/${matchedCategory.categorySlug}/${product.productSlug}`
+    ? `/dashboard/${matchedBrand.brandSlug}/${matchedCategory.categorySlug}/${product.productSlug}`
     : null;
 
   return (

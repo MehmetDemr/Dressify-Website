@@ -182,7 +182,7 @@ function DashboardHeader() {
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
-                  to={`/${brand.brandSlug}`}
+                  to={`/dashboard/${brand.brandSlug}`}
                   className="dash-dropdown-item"
                   onClick={() => {
                     setOpenDropdown(null);

@@ -7,7 +7,81 @@ import "../styles/Brand.css";
 
 /*  Product Card (Brand sayfasına özel)  */
 function BrandProductCard({ product, brand, categories }) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(!!product.isFavourite);
+  const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
+  const [isLiking, setIsLiking] = useState(false);
+
+  useEffect(() => {
+    setLiked(!!product.isFavourite);
+    setFavouriteId(product.favouriteId || null);
+  }, [product.isFavourite, product.favouriteId]);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    if (isLiking) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Favorilere eklemek için giriş yapmalısınız.");
+      return;
+    }
+
+    try {
+      setIsLiking(true);
+      let response;
+
+      if (liked && favouriteId) {
+        response = await fetch(`${API_BASE_URL}/favourite/${favouriteId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } else if (!liked) {
+        response = await fetch(`${API_BASE_URL}/favourite`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ product_id: product.id }),
+        });
+      } else {
+        const listRes = await fetch(`${API_BASE_URL}/favourite`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const listData = await listRes.json();
+        const match = listData.data?.find(
+          (f) => String(f.product_id) === String(product.id),
+        );
+        if (match) {
+          setFavouriteId(match.id);
+          response = await fetch(`${API_BASE_URL}/favourite/${match.id}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+      }
+
+      if (!response) return;
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setLiked(data.isFavourite ?? !liked);
+        setFavouriteId(data.isFavourite ? data.favouriteId || null : null);
+      } else {
+        console.error("Favori işlemi başarısız:", data.message);
+      }
+    } catch (error) {
+      console.error("İstek hatası:", error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
@@ -44,8 +118,13 @@ function BrandProductCard({ product, brand, categories }) {
         <button
           type="button"
           className={`bp-like ${liked ? "liked" : ""}`}
-          onClick={() => setLiked((p) => !p)}
+          onClick={handleLike}
+          disabled={isLiking}
           aria-label="Favoriye ekle"
+          style={{
+            color: liked ? "#ff4d4f" : "inherit",
+            cursor: isLiking ? "not-allowed" : "pointer",
+          }}
         >
           <svg
             width="13"

@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import BrandPage from "./pages/Brand";
 import CategoryPage from "./pages/Category";
+import ProfilePage from "./pages/Profile";
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
           path="/dashboard/:brandSlug/:categorySlug"
           element={<CategoryPage />}
         />
+
+        <Route path="/dashboard/profile" element={<ProfilePage />} />
       </Routes>
     </BrowserRouter>
   );

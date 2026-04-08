@@ -7,6 +7,8 @@ import BrandPage from "./pages/Brand";
 import CategoryPage from "./pages/Category";
 import ProfilePage from "./pages/Profile";
 import FavoritesPage from "./pages/Favourite";
+import SettingsPage from "./pages/Settings";
+import CartPage from "./pages/Card";
 
 function App() {
   return (
@@ -31,6 +33,10 @@ function App() {
         <Route path="/dashboard/profile" element={<ProfilePage />} />
 
         <Route path="/dashboard/favourite" element={<FavoritesPage />} />
+
+        <Route path="/dashboard/settings" element={<SettingsPage />} />
+
+        <Route path="/dashboard/card" element={<CartPage />} />
       </Routes>
     </BrowserRouter>
   );

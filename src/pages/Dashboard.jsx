@@ -4,6 +4,84 @@ import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
 import "../styles/Dashboard.css";
 
+function Pagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  perPage,
+  onPageChange,
+}) {
+  const pages = [];
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    )
+      pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  const start = (currentPage - 1) * perPage + 1;
+  const end = Math.min(currentPage * perPage, totalItems);
+
+  return (
+    <div className="dash-pagination">
+      <div className="dash-pg-controls">
+        <button
+          className="dash-pg-btn dash-pg-arrow"
+          onClick={() => {
+            onPageChange(currentPage - 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          disabled={currentPage === 1}
+        >
+          ‹
+        </button>
+
+        {pages.map((p, i) =>
+          p === "..." ? (
+            <span key={`dots-${i}`} className="dash-pg-dots">
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              className={`dash-pg-btn ${p === currentPage ? "active" : ""}`}
+              onClick={() => {
+                onPageChange(p);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              {p}
+            </button>
+          ),
+        )}
+
+        <button
+          className="dash-pg-btn dash-pg-arrow"
+          onClick={() => {
+            onPageChange(currentPage + 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          disabled={currentPage === totalPages}
+        >
+          ›
+        </button>
+      </div>
+      <p className="dash-pg-info">
+        {start}–{end} / {totalItems} ürün
+      </p>
+    </div>
+  );
+}
+
 function ProductCard({ product, categories, brands }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
@@ -56,7 +134,6 @@ function ProductCard({ product, categories, brands }) {
       let response;
 
       if (liked && favouriteId) {
-        // Favoriden çıkar
         response = await fetch(`${API_BASE_URL}/favourite/${favouriteId}`, {
           method: "DELETE",
           headers: {
@@ -65,7 +142,6 @@ function ProductCard({ product, categories, brands }) {
           },
         });
       } else if (!liked) {
-        // Favoriye ekle
         response = await fetch(`${API_BASE_URL}/favourite`, {
           method: "POST",
           headers: {
@@ -75,7 +151,6 @@ function ProductCard({ product, categories, brands }) {
           body: JSON.stringify({ product_id: product.id }),
         });
       } else {
-        // liked=true ama favouriteId yok — önce listeyi çek, id'yi bul
         const listRes = await fetch(`${API_BASE_URL}/favourite`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -262,6 +337,13 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("Tümü");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    totalItems: 0,
+  });
+
+  const LIMIT = 24;
 
   useEffect(() => {
     async function fetchData() {
@@ -272,7 +354,7 @@ function Dashboard() {
         const token = localStorage.getItem("token");
 
         const [productRes, brandRes, categoryRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/product`, {
+          fetch(`${API_BASE_URL}/product?page=${page}&limit=${LIMIT}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -313,11 +395,11 @@ function Dashboard() {
           throw new Error(categoryJson.message || "Kategoriler alınamadı.");
         }
 
-        const sortedProducts = [...(productJson.data || [])]
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 51);
-
-        setProducts(sortedProducts);
+        setProducts(productJson.data || []);
+        setPagination({
+          totalPages: productJson.totalPages || 1,
+          totalItems: productJson.totalItems || 0,
+        });
         setBrands(brandJson.data || []);
         setCategories(categoryJson.data || []);
       } catch (err) {
@@ -328,7 +410,12 @@ function Dashboard() {
     }
 
     fetchData();
-  }, []);
+  }, [page]);
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    setPage(1);
+  };
 
   const filters = ["Tümü", "Yeni"];
 
@@ -360,7 +447,7 @@ function Dashboard() {
                 <button
                   key={filter}
                   className={`dash-filter-btn ${activeFilter === filter ? "active" : ""}`}
-                  onClick={() => setActiveFilter(filter)}
+                  onClick={() => handleFilterChange(filter)}
                 >
                   {filter}
                 </button>
@@ -401,6 +488,16 @@ function Dashboard() {
               <p className="dash-empty">Gösterilecek ürün bulunamadı.</p>
             )}
           </div>
+        )}
+
+        {!loading && !error && pagination.totalPages > 1 && (
+          <Pagination
+            currentPage={page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            perPage={LIMIT}
+            onPageChange={setPage}
+          />
         )}
       </main>
 

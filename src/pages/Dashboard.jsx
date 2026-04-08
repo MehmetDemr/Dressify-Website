@@ -8,6 +8,9 @@ function ProductCard({ product, categories, brands }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
   const [isLiking, setIsLiking] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const brandName = product.category?.brand?.brandName || "Dressify";
+  const categoryName = product.category?.categoryName || "Kategori";
 
   useEffect(() => {
     setLiked(!!product.isFavourite);
@@ -17,7 +20,6 @@ function ProductCard({ product, categories, brands }) {
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
   const productTitle = product.productName || product.name || "İsimsiz Ürün";
-  const categoryName = product.category?.name || product.category || "Kategori";
   const isNew = product.createdAt
     ? Date.now() - new Date(product.createdAt).getTime() <
       1000 * 60 * 60 * 24 * 7
@@ -110,6 +112,47 @@ function ProductCard({ product, categories, brands }) {
     }
   };
 
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    if (isAddingToCart) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Sepete eklemek için giriş yapmalısınız.");
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+
+      const response = await fetch(`${API_BASE_URL}/card`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          quantity: 1,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert("Ürün sepete eklendi.");
+      } else {
+        console.error("Sepete ekleme başarısız:", data.message);
+        alert(data.message || "Ürün sepete eklenemedi.");
+      }
+    } catch (error) {
+      console.error("Sepete ekleme hatası:", error);
+      alert("Bir hata oluştu.");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <div className="product-card">
       <div className={`product-img ${!imageUrl ? "no-image" : ""}`}>
@@ -121,7 +164,7 @@ function ProductCard({ product, categories, brands }) {
           />
         ) : (
           <div className="product-img-fallback">
-            <span>DRESSIFY</span>
+            <span>{brandName?.toUpperCase() || "DRESSIFY"}</span>
           </div>
         )}
 
@@ -150,13 +193,19 @@ function ProductCard({ product, categories, brands }) {
           </svg>
         </button>
 
-        <button type="button" className="product-add-cart">
-          Sepete Ekle
+        <button
+          type="button"
+          className="product-add-cart"
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          style={{ cursor: isAddingToCart ? "not-allowed" : "pointer" }}
+        >
+          {isAddingToCart ? "Ekleniyor..." : "Sepete Ekle"}
         </button>
       </div>
 
       <div className="product-info">
-        <p className="product-brand">Dressify</p>
+        <p className="product-brand">{brandName}</p>
         <p className="product-name">{productTitle}</p>
 
         <div className="product-bottom">

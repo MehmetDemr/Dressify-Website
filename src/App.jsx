@@ -9,6 +9,7 @@ import ProfilePage from "./pages/Profile";
 import FavoritesPage from "./pages/Favourite";
 import SettingsPage from "./pages/Settings";
 import CartPage from "./pages/Card";
+import ProductDetailsPage from "./pages/ProductDetails";
 
 function App() {
   return (
@@ -37,6 +38,11 @@ function App() {
         <Route path="/dashboard/settings" element={<SettingsPage />} />
 
         <Route path="/dashboard/card" element={<CartPage />} />
+
+        <Route
+          path="/dashboard/:brandSlug/:categorySlug/:productSlug"
+          element={<ProductDetailsPage />}
+        />
       </Routes>
     </BrowserRouter>
   );

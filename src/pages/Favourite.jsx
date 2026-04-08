@@ -4,28 +4,110 @@ import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
 import "../styles/Favourite.css";
 
-/*  Product Card  */
-function FavoriteCard({ product, brand, category, favoriteId, onRemove }) {
+const LIMIT = 24;
+
+/*  Pagination  */
+function Pagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  perPage,
+  onPageChange,
+}) {
+  const pages = [];
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    )
+      pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  const start = (currentPage - 1) * perPage + 1;
+  const end = Math.min(currentPage * perPage, totalItems);
+
+  return (
+    <div className="dash-pagination">
+      <div className="dash-pg-controls">
+        <button
+          className="dash-pg-btn dash-pg-arrow"
+          onClick={() => {
+            onPageChange(currentPage - 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          disabled={currentPage === 1}
+        >
+          ‹
+        </button>
+
+        {pages.map((p, i) =>
+          p === "..." ? (
+            <span key={`dots-${i}`} className="dash-pg-dots">
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              className={`dash-pg-btn ${p === currentPage ? "active" : ""}`}
+              onClick={() => {
+                onPageChange(p);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              {p}
+            </button>
+          ),
+        )}
+
+        <button
+          className="dash-pg-btn dash-pg-arrow"
+          onClick={() => {
+            onPageChange(currentPage + 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          disabled={currentPage === totalPages}
+        >
+          ›
+        </button>
+      </div>
+      <p className="dash-pg-info">
+        {start}–{end} / {totalItems} ürün
+      </p>
+    </div>
+  );
+}
+
+/*  Favorite Card  */
+function FavoriteCard({ fav, onRemove }) {
   const [removing, setRemoving] = useState(false);
 
-  const imageUrl =
-    product.imageUrl || product.image || product.thumbnail || null;
-  const productTitle = product.productName || product.name || "İsimsiz Ürün";
-
-  const detailUrl =
-    brand?.brandSlug && category?.categorySlug && product.productSlug
-      ? `/dashboard/${brand.brandSlug}/${category.categorySlug}/${product.productSlug}`
-      : null;
+  const product = fav.product || {}; 
+  const brandName = product.brandName || "Dressify";
+  const categoryName = product.categoryName || "";
+  const imageUrl = product.imageUrl || null;
+  const productTitle = product.productName || "İsimsiz Ürün";
 
   async function handleRemove() {
     try {
       setRemoving(true);
       const token = localStorage.getItem("token");
-      await fetch(`${API_BASE_URL}/favourite/${favoriteId}`, {
+      const res = await fetch(`${API_BASE_URL}/favourite/${fav.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      onRemove(favoriteId);
+      if (res.ok) {
+        onRemove(fav.id);
+      } else {
+        setRemoving(false);
+      }
     } catch {
       setRemoving(false);
     }
@@ -38,11 +120,10 @@ function FavoriteCard({ product, brand, category, favoriteId, onRemove }) {
           <img src={imageUrl} alt={productTitle} className="fav-card-img-tag" />
         ) : (
           <div className="fav-card-fallback">
-            <span>{brand?.brandName || "DRESSIFY"}</span>
+            <span>{brandName.toUpperCase()}</span>
           </div>
         )}
 
-        {/* Remove from favorites */}
         <button
           type="button"
           className="fav-remove-btn"
@@ -68,13 +149,11 @@ function FavoriteCard({ product, brand, category, favoriteId, onRemove }) {
       </div>
 
       <div className="fav-card-info">
-        <p className="fav-card-brand">{brand?.brandName || "Dressify"}</p>
+        <p className="fav-card-brand">{brandName}</p>
         <p className="fav-card-name">{productTitle}</p>
 
         <div className="fav-card-bottom">
-          <span className="fav-card-category">
-            {category?.categoryName || "—"}
-          </span>
+          <span className="fav-card-category">{categoryName}</span>{" "}
           <span className="fav-card-price">
             {product.price != null
               ? `${Number(product.price).toLocaleString("tr-TR")}₺`
@@ -86,9 +165,10 @@ function FavoriteCard({ product, brand, category, favoriteId, onRemove }) {
           type="button"
           className="fav-detail-btn"
           onClick={() => {
-            if (detailUrl) window.location.href = detailUrl;
+            if (product.id)
+              window.location.href = `/dashboard/product/${product.id}`;
           }}
-          disabled={!detailUrl}
+          disabled={!product.id}
         >
           Detay
         </button>
@@ -153,11 +233,13 @@ function EmptyFavorites() {
 /*  Main Page  */
 function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    totalItems: 0,
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -166,39 +248,28 @@ function FavoritesPage() {
         setError(null);
 
         const token = localStorage.getItem("token");
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        };
 
-        const [favRes, productRes, categoryRes, brandRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/favourite`, { headers }),
-          fetch(`${API_BASE_URL}/product`, { headers }),
-          fetch(`${API_BASE_URL}/category`, { headers }),
-          fetch(`${API_BASE_URL}/brand`, { headers }),
-        ]);
+        const res = await fetch(
+          `${API_BASE_URL}/favourite?page=${page}&limit=${LIMIT}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-        const [favJson, productJson, categoryJson, brandJson] =
-          await Promise.all([
-            favRes.json(),
-            productRes.json(),
-            categoryRes.json(),
-            brandRes.json(),
-          ]);
+        const json = await res.json();
 
-        if (!favJson.success)
-          throw new Error(favJson.message || "Favoriler alınamadı.");
-        if (!productJson.success)
-          throw new Error(productJson.message || "Ürünler alınamadı.");
-        if (!categoryJson.success)
-          throw new Error(categoryJson.message || "Kategoriler alınamadı.");
-        if (!brandJson.success)
-          throw new Error(brandJson.message || "Markalar alınamadı.");
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Favoriler alınamadı.");
+        }
 
-        setFavorites(favJson.data || []);
-        setProducts(productJson.data || []);
-        setCategories(categoryJson.data || []);
-        setBrands(brandJson.data || []);
+        setFavorites(json.data || []);
+        setPagination({
+          totalPages: json.totalPages || 1,
+          totalItems: json.totalItems || 0,
+        });
       } catch (err) {
         setError(err.message || "Bir hata oluştu.");
       } finally {
@@ -207,30 +278,12 @@ function FavoritesPage() {
     }
 
     fetchData();
-  }, []);
+  }, [page]);
 
   function handleRemove(favoriteId) {
     setFavorites((prev) => prev.filter((f) => f.id !== favoriteId));
+    setPagination((prev) => ({ ...prev, totalItems: prev.totalItems - 1 }));
   }
-
-  // Favori product_id'lerine göre ürünleri eşleştir
-  const favoriteProducts = favorites
-    .map((fav) => {
-      const product = products.find(
-        (p) => String(p.id) === String(fav.product_id),
-      );
-      if (!product) return null;
-
-      const category = categories.find(
-        (c) => String(c.id) === String(product.category_id),
-      );
-      const brand = brands.find(
-        (b) => String(b.id) === String(category?.brand_id),
-      );
-
-      return { fav, product, category, brand };
-    })
-    .filter(Boolean);
 
   return (
     <div className="fav-layout">
@@ -256,7 +309,7 @@ function FavoritesPage() {
               <h1 className="fav-hero-title">Favorilerim</h1>
               {!error && (
                 <p className="fav-hero-sub">
-                  {favoriteProducts.length} ürün kaydedildi
+                  {pagination.totalItems} ürün kaydedildi
                 </p>
               )}
             </>
@@ -285,21 +338,30 @@ function FavoritesPage() {
         {/*  Content  */}
         {!loading &&
           !error &&
-          (favoriteProducts.length === 0 ? (
+          (favorites.length === 0 ? (
             <EmptyFavorites />
           ) : (
-            <div className="fav-grid">
-              {favoriteProducts.map(({ fav, product, category, brand }) => (
-                <FavoriteCard
-                  key={fav.id}
-                  favoriteId={fav.id}
-                  product={product}
-                  category={category}
-                  brand={brand}
-                  onRemove={handleRemove}
+            <>
+              <div className="fav-grid">
+                {favorites.map((fav) => (
+                  <FavoriteCard
+                    key={fav.id}
+                    fav={fav}
+                    onRemove={handleRemove}
+                  />
+                ))}
+              </div>
+
+              {pagination.totalPages > 1 && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  perPage={LIMIT}
+                  onPageChange={setPage}
                 />
-              ))}
-            </div>
+              )}
+            </>
           ))}
       </main>
 

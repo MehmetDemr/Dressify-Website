@@ -1,4 +1,3 @@
-// src/pages/ProductDetailsPage.jsx
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
@@ -12,8 +11,11 @@ function ProductDetailsPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [liked, setLiked] = useState(false);
+  const [favouriteId, setFavouriteId] = useState(null);
   const [likeLoading, setLikeLoading] = useState(false);
+
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -30,7 +32,6 @@ function ProductDetailsPage() {
           Authorization: `Bearer ${token}`,
         };
 
-        // Slug'dan id bul
         const listRes = await fetch(`${API_BASE_URL}/product`, { headers });
         const listJson = await listRes.json();
         if (!listJson.success) throw new Error("Ürünler alınamadı.");
@@ -40,16 +41,17 @@ function ProductDetailsPage() {
         );
         if (!match) throw new Error("Ürün bulunamadı.");
 
-        // Detay çek
         const detailRes = await fetch(`${API_BASE_URL}/product/${match.id}`, {
           headers,
         });
         const detailJson = await detailRes.json();
-        if (!detailJson.success)
+        if (!detailJson.success) {
           throw new Error(detailJson.message || "Ürün detayı alınamadı.");
+        }
 
         setProduct(detailJson.data);
-        setLiked(detailJson.data.isFavourite ?? false);
+        setLiked(!!detailJson.data.isFavourite);
+        setFavouriteId(detailJson.data.favouriteId || null);
       } catch (err) {
         setError(err.message || "Bir hata oluştu.");
       } finally {
@@ -61,18 +63,28 @@ function ProductDetailsPage() {
   }, [productSlug]);
 
   async function handleLike() {
-    if (likeLoading) return;
-    setLikeLoading(true);
+    if (likeLoading || !product) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Favorilere eklemek için giriş yapmalısınız.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      if (liked) {
-        await fetch(`${API_BASE_URL}/favourite/${product.id}`, {
+      setLikeLoading(true);
+      let response;
+
+      if (liked && favouriteId) {
+        response = await fetch(`${API_BASE_URL}/favourite/${favouriteId}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
-        setLiked(false);
-      } else {
-        await fetch(`${API_BASE_URL}/favourite`, {
+      } else if (!liked) {
+        response = await fetch(`${API_BASE_URL}/favourite`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -80,8 +92,60 @@ function ProductDetailsPage() {
           },
           body: JSON.stringify({ product_id: product.id }),
         });
-        setLiked(true);
+      } else {
+        const listRes = await fetch(`${API_BASE_URL}/favourite`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const listData = await listRes.json();
+        const match = listData.data?.find(
+          (f) => String(f.product_id) === String(product.id),
+        );
+
+        if (match) {
+          setFavouriteId(match.id);
+
+          response = await fetch(`${API_BASE_URL}/favourite/${match.id}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
       }
+
+      if (!response) return;
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const newLiked = data.isFavourite ?? !liked;
+        const newFavouriteId = newLiked
+          ? data.favouriteId || favouriteId
+          : null;
+
+        setLiked(newLiked);
+        setFavouriteId(newFavouriteId);
+
+        setProduct((prev) =>
+          prev
+            ? {
+                ...prev,
+                isFavourite: newLiked,
+                favouriteId: newFavouriteId,
+              }
+            : prev,
+        );
+      } else {
+        alert(data.message || "Favori işlemi başarısız.");
+      }
+    } catch (error) {
+      console.error("Favori işlemi hatası:", error);
+      alert("Bir hata oluştu.");
     } finally {
       setLikeLoading(false);
     }
@@ -123,7 +187,6 @@ function ProductDetailsPage() {
       <DashboardHeader />
 
       <main className="pdp-main">
-        {/* Breadcrumb */}
         {!loading && !error && (
           <nav className="pdp-breadcrumb">
             <a href="/dashboard">Ana Sayfa</a>
@@ -150,7 +213,6 @@ function ProductDetailsPage() {
           </nav>
         )}
 
-        {/* Error */}
         {error && (
           <div className="pdp-error">
             <p>{error}</p>
@@ -160,7 +222,6 @@ function ProductDetailsPage() {
           </div>
         )}
 
-        {/* Skeleton */}
         {loading && (
           <div className="pdp-body">
             <div className="pdp-img-wrap skeleton-box" />
@@ -197,10 +258,8 @@ function ProductDetailsPage() {
           </div>
         )}
 
-        {/* Content */}
         {!loading && !error && product && (
           <div className="pdp-body">
-            {/* Left — Image */}
             <div className="pdp-img-wrap">
               {imageUrl ? (
                 <img
@@ -220,7 +279,8 @@ function ProductDetailsPage() {
                 type="button"
                 className={`pdp-like-btn ${liked ? "liked" : ""} ${likeLoading ? "loading" : ""}`}
                 onClick={handleLike}
-                aria-label="Favoriye ekle"
+                aria-label={liked ? "Favorilerden çıkar" : "Favoriye ekle"}
+                disabled={likeLoading}
               >
                 <svg
                   width="16"
@@ -235,9 +295,7 @@ function ProductDetailsPage() {
               </button>
             </div>
 
-            {/* Right — Info */}
             <div className="pdp-info">
-              {/* Brand + Category */}
               <div className="pdp-info-top">
                 <span className="pdp-brand-tag">{brand?.brandName}</span>
                 {category && (
@@ -247,20 +305,16 @@ function ProductDetailsPage() {
                 )}
               </div>
 
-              {/* Title */}
               <h1 className="pdp-title">{product.productName}</h1>
 
-              {/* Price */}
               <p className="pdp-price">
                 {product.price != null
                   ? `${Number(product.price).toLocaleString("tr-TR")}₺`
                   : "—"}
               </p>
 
-              {/* Divider */}
               <div className="pdp-divider" />
 
-              {/* Description */}
               {product.description && (
                 <div className="pdp-desc-wrap">
                   <p className="pdp-desc-label">Ürün Açıklaması</p>
@@ -268,7 +322,6 @@ function ProductDetailsPage() {
                 </div>
               )}
 
-              {/* Stock */}
               <div className="pdp-stock">
                 <span
                   className={`pdp-stock-dot ${product.stock > 0 ? "in" : "out"}`}
@@ -282,56 +335,23 @@ function ProductDetailsPage() {
 
               <div className="pdp-divider" />
 
-              {/* Quantity + Cart */}
               <div className="pdp-actions">
-
-
-                {/* Add to cart */}
                 <button
                   type="button"
                   className={`pdp-cart-btn ${addedToCart ? "added" : ""}`}
                   onClick={handleAddToCart}
                   disabled={cartLoading || product.stock === 0}
                 >
-                  {addedToCart ? (
-                    <>
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      Sepete Eklendi
-                    </>
-                  ) : cartLoading ? (
-                    "Ekleniyor..."
-                  ) : product.stock === 0 ? (
-                    "Stok Tükendi"
-                  ) : (
-                    <>
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <path d="M16 10a4 4 0 0 1-8 0" />
-                      </svg>
-                      Sepete Ekle
-                    </>
-                  )}
+                  {addedToCart
+                    ? "Sepete Eklendi"
+                    : cartLoading
+                      ? "Ekleniyor..."
+                      : product.stock === 0
+                        ? "Stok Tükendi"
+                        : "Sepete Ekle"}
                 </button>
               </div>
 
-              {/* Meta */}
               <div className="pdp-meta">
                 <div className="pdp-meta-row">
                   <span className="pdp-meta-key">Ürün Kodu</span>

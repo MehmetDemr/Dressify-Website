@@ -1,10 +1,25 @@
 import { useState } from "react";
 import logo from "../../../assets/dressify-logo.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
 
 function LandingPageHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavClick = (e, hash) => {
+    e.preventDefault();
+    setMenuOpen(false);
+
+    if (location.pathname === "/") {
+      const el = document.querySelector(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/" + hash);
+    }
+  };
 
   return (
     <div className="navbar-inner">
@@ -15,16 +30,13 @@ function LandingPageHeader() {
       </div>
 
       <nav className={`nav-links ${menuOpen ? "nav-links--open" : ""}`}>
-        <a href="#collection" onClick={() => setMenuOpen(false)}>
-          Collection
-        </a>
-        <a href="#about" onClick={() => setMenuOpen(false)}>
+        <a href="#about" onClick={(e) => handleNavClick(e, "#about")}>
           About
         </a>
-        <a href="#featured" onClick={() => setMenuOpen(false)}>
+        <a href="#featured" onClick={(e) => handleNavClick(e, "#featured")}>
           Featured
         </a>
-        <a href="#contact" onClick={() => setMenuOpen(false)}>
+        <a href="#contact" onClick={(e) => handleNavClick(e, "#contact")}>
           Contact
         </a>
 

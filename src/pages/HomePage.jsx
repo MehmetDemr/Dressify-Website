@@ -1,9 +1,22 @@
 import LandingPageHeader from "../components/Landing-Page/landing-page-header/Header";
 import LandingPageFooter from "../components/Landing-Page/landing-page-footer/Footer";
 import "../styles/HomePage.css";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 function HomePage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      setTimeout(() => {
+        const el = document.querySelector(location.hash);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [location]);
+
   return (
     <>
       <LandingPageHeader></LandingPageHeader>
@@ -31,14 +44,22 @@ function HomePage() {
               <button className="btn-ghost">Our Story →</button>
             </div>
           </div>
-
-         
         </section>
 
         {/*  MARQUEE STRIP  */}
         <div className="marquee-strip">
           <div className="marquee-track">
             {[
+              "NEW ARRIVALS",
+              "MAVİ",
+              "ZARA",
+              "PULL&BEAR",
+              "NIKE",
+              "ADIDAS",
+              "H&M",
+              "KOTON",
+              "COLINS",
+              "SEASON 2026",
               "NEW ARRIVALS",
               "MAVİ",
               "ZARA",
@@ -56,8 +77,6 @@ function HomePage() {
             ))}
           </div>
         </div>
-
-
 
         {/*  FEATURED BANNER  */}
         <section className="featured" id="featured">

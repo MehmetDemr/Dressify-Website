@@ -31,14 +31,22 @@ function HomePage() {
               <button className="btn-ghost">Our Story →</button>
             </div>
           </div>
-
-         
         </section>
 
         {/*  MARQUEE STRIP  */}
         <div className="marquee-strip">
           <div className="marquee-track">
             {[
+              "NEW ARRIVALS",
+              "MAVİ",
+              "ZARA",
+              "PULL&BEAR",
+              "NIKE",
+              "ADIDAS",
+              "H&M",
+              "KOTON",
+              "COLINS",
+              "SEASON 2026",
               "NEW ARRIVALS",
               "MAVİ",
               "ZARA",
@@ -56,8 +64,6 @@ function HomePage() {
             ))}
           </div>
         </div>
-
-
 
         {/*  FEATURED BANNER  */}
         <section className="featured" id="featured">

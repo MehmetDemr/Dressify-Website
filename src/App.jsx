@@ -10,10 +10,12 @@ import FavoritesPage from "./pages/Favourite";
 import SettingsPage from "./pages/Settings";
 import CartPage from "./pages/Card";
 import ProductDetailsPage from "./pages/ProductDetails";
+import ScrollToTop from "./components/ScrollTop/ScrollTop";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Landing */}
         <Route path="/" element={<HomePage />} />

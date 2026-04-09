@@ -11,6 +11,7 @@ import SettingsPage from "./pages/Settings";
 import CartPage from "./pages/Card";
 import ProductDetailsPage from "./pages/ProductDetails";
 import ScrollToTop from "./components/ScrollTop/ScrollTop";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -45,6 +46,8 @@ function App() {
           path="/dashboard/:brandSlug/:categorySlug/:productSlug"
           element={<ProductDetailsPage />}
         />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

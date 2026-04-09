@@ -300,30 +300,22 @@ function SettingsPage() {
                   description="Hangi konularda e-posta almak istediğinizi seçin."
                 >
                   <Row
-                    label="İndirim ve Kampanyalar"
-                    sublabel="Özel fırsatlar ve indirim kodları"
-                  >
-                    <Toggle
-                      checked={notif.emailDiscount}
-                      onChange={() => toggleNotif("emailDiscount")}
-                    />
-                  </Row>
-                  <Row
-                    label="Sipariş Güncellemeleri"
-                    sublabel="Kargo ve teslimat bildirimleri"
-                  >
-                    <Toggle
-                      checked={notif.emailOrder}
-                      onChange={() => toggleNotif("emailOrder")}
-                    />
-                  </Row>
-                  <Row
                     label="Yeni Ürünler"
                     sublabel="Favori markalarınızın yeni koleksiyonları"
                   >
                     <Toggle
                       checked={notif.emailNewProduct}
                       onChange={() => toggleNotif("emailNewProduct")}
+                    />
+                  </Row>
+
+                  <Row
+                    label="İndirim ve Kampanyalar"
+                    sublabel="Anlık fırsat mesajları"
+                  >
+                    <Toggle
+                      checked={notif.smsDiscount}
+                      onChange={() => toggleNotif("emailDiscount")}
                     />
                   </Row>
                 </Section>
@@ -341,13 +333,14 @@ function SettingsPage() {
                       onChange={() => toggleNotif("smsDiscount")}
                     />
                   </Row>
+
                   <Row
-                    label="Sipariş Güncellemeleri"
-                    sublabel="Kargo takip SMS'leri"
+                    label="Yeni Ürünler"
+                    sublabel="Favori markalarınızın yeni koleksiyonları"
                   >
                     <Toggle
-                      checked={notif.smsOrder}
-                      onChange={() => toggleNotif("smsOrder")}
+                      checked={notif.emailNewProduct}
+                      onChange={() => toggleNotif("smsNewProduct")}
                     />
                   </Row>
                 </Section>
@@ -414,24 +407,6 @@ function SettingsPage() {
                     Yeni Kart Ekle
                   </button>
                 </Section>
-
-                <Section
-                  title="Fatura Tercihleri"
-                  description="Varsayılan fatura tipinizi seçin."
-                >
-                  <Row
-                    label="E-Fatura"
-                    sublabel="Faturalar e-posta adresinize gönderilsin"
-                  >
-                    <Toggle checked={true} onChange={() => {}} />
-                  </Row>
-                  <Row
-                    label="Kurumsal Fatura"
-                    sublabel="Şirket adına fatura kesilsin"
-                  >
-                    <Toggle checked={false} onChange={() => {}} />
-                  </Row>
-                </Section>
               </>
             )}
 
@@ -485,7 +460,17 @@ function SettingsPage() {
                   >
                     <Toggle
                       checked={privacy.twoFactor}
-                      onChange={() => togglePrivacy("twoFactor")}
+                      onChange={() => togglePrivacy("twoFactorSms")}
+                    />
+                  </Row>
+
+                  <Row
+                    label="İki Faktörlü Doğrulama"
+                    sublabel="Giriş yaparken email ile doğrulama kodu"
+                  >
+                    <Toggle
+                      checked={privacy.twoFactor}
+                      onChange={() => togglePrivacy("twoFactorEmail")}
                     />
                   </Row>
                   <Row
@@ -495,30 +480,6 @@ function SettingsPage() {
                     <Toggle
                       checked={privacy.loginAlert}
                       onChange={() => togglePrivacy("loginAlert")}
-                    />
-                  </Row>
-                </Section>
-
-                <Section
-                  title="Veri & Gizlilik"
-                  description="Verilerinizin nasıl kullanılacağını kontrol edin."
-                >
-                  <Row
-                    label="Veri Paylaşımı"
-                    sublabel="Kişiselleştirilmiş deneyim için anonim kullanım verileri"
-                  >
-                    <Toggle
-                      checked={privacy.dataSharing}
-                      onChange={() => togglePrivacy("dataSharing")}
-                    />
-                  </Row>
-                  <Row
-                    label="Profil Görünürlüğü"
-                    sublabel="Diğer kullanıcılar profil bilgilerinizi görebilsin"
-                  >
-                    <Toggle
-                      checked={privacy.activityVisible}
-                      onChange={() => togglePrivacy("activityVisible")}
                     />
                   </Row>
                 </Section>
@@ -660,31 +621,6 @@ function SettingsPage() {
                       Şifreyi Güncelle
                     </button>
                   </div>
-                </Section>
-
-                <Section
-                  title="Oturum Yönetimi"
-                  description="Aktif oturumlarınızı görün ve yönetin."
-                >
-                  <div className="stg-session">
-                    <div className="stg-session-info">
-                      <div className="stg-session-dot active" />
-                      <div>
-                        <p className="stg-session-device">Chrome — Windows</p>
-                        <p className="stg-session-time">
-                          Şu an aktif · İzmir, TR
-                        </p>
-                      </div>
-                    </div>
-                    <span className="stg-session-badge">Bu cihaz</span>
-                  </div>
-                  <button
-                    className="stg-danger-btn"
-                    type="button"
-                    style={{ marginTop: 16 }}
-                  >
-                    Tüm Oturumları Kapat
-                  </button>
                 </Section>
               </>
             )}

@@ -1,3 +1,8 @@
+.auth-card *,
+.auth-card *::before,
+.auth-card *::after {
+  box-sizing: border-box;
+}
 .auth-page {
   position: relative;
   min-height: 100vh;
@@ -461,17 +466,30 @@
   }
 }
 
-@media (max-width: 576px) {
-  .auth-page {
-    padding: 24px 16px;
+@media (max-width: 768px) {
+.auth-page {
+    padding: 16px 12px;
   }
 
-  .auth-card {
-    padding: 30px 22px;
+ .auth-card {
+    padding: 28px 16px; 
+    width: 100%;
   }
 
   .auth-title {
     font-size: 38px;
+  }
+
+    .auth-shell {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .auth-field input,
+  .auth-select {
+    font-size: 16px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .auth-subtitle {
@@ -496,7 +514,6 @@
     flex: 1 1 100%;
   }
 }
-
 
 .auth-back-btn {
   background: none;

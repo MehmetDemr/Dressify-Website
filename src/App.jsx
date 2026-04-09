@@ -12,6 +12,7 @@ import CartPage from "./pages/Card";
 import ProductDetailsPage from "./pages/ProductDetails";
 import ScrollToTop from "./components/ScrollTop/ScrollTop";
 import NotFound from "./pages/NotFound";
+import UserActivityPage from "./pages/UserActivity";
 
 function App() {
   return (
@@ -46,6 +47,8 @@ function App() {
           path="/dashboard/:brandSlug/:categorySlug/:productSlug"
           element={<ProductDetailsPage />}
         />
+
+        <Route path="/dashboard/events" element={<UserActivityPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

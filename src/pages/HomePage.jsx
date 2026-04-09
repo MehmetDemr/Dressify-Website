@@ -1,6 +1,7 @@
 import LandingPageHeader from "../components/Landing-Page/landing-page-header/Header";
 import LandingPageFooter from "../components/Landing-Page/landing-page-footer/Footer";
 import "../styles/HomePage.css";
+import { Link } from "react-router-dom";
 
 function HomePage() {
   return (
@@ -31,28 +32,23 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="hero-scroll-hint">
-            <span className="scroll-line" />
-            <span className="scroll-label">Scroll</span>
-          </div>
+         
         </section>
 
         {/*  MARQUEE STRIP  */}
         <div className="marquee-strip">
           <div className="marquee-track">
             {[
-              "New Arrivals",
-              "SS 2026",
-              "Free Shipping",
-              "Sustainable Fashion",
-              "New Arrivals",
-              "SS 2026",
-              "Free Shipping",
-              "Sustainable Fashion",
-              "New Arrivals",
-              "SS 2026",
-              "Free Shipping",
-              "Sustainable Fashion",
+              "NEW ARRIVALS",
+              "MAVİ",
+              "ZARA",
+              "PULL&BEAR",
+              "NIKE",
+              "ADIDAS",
+              "H&M",
+              "KOTON",
+              "COLINS",
+              "SEASON 2026",
             ].map((t, i) => (
               <span key={i} className="marquee-item">
                 {t} <span className="marquee-dot">◆</span>
@@ -61,57 +57,7 @@ function HomePage() {
           </div>
         </div>
 
-        {/*  COLLECTION  */}
-        <section className="collection" id="collection">
-          <div className="section-header">
-            <p className="section-eyebrow">The Edit</p>
-            <h2 className="section-title">Latest Collection</h2>
-          </div>
 
-          <div className="collection-grid">
-            {[
-              {
-                tag: "Bestseller",
-                name: "Linen Drape Jacket",
-                price: "₺2.890",
-                color: "#e8e0d5",
-              },
-              {
-                tag: "New",
-                name: "Minimal Shift Dress",
-                price: "₺1.650",
-                color: "#d4cfc8",
-              },
-              {
-                tag: "New",
-                name: "Wide Leg Trousers",
-                price: "₺1.990",
-                color: "#c9c0b5",
-              },
-              {
-                tag: "Limited",
-                name: "Silk Wrap Blouse",
-                price: "₺2.290",
-                color: "#bfb8ae",
-              },
-            ].map((item, i) => (
-              <div className="product-card" key={i}>
-                <div className="product-img" style={{ background: item.color }}>
-                  <span className="product-tag">{item.tag}</span>
-                  <button className="product-quick">Quick Add</button>
-                </div>
-                <div className="product-info">
-                  <p className="product-name">{item.name}</p>
-                  <p className="product-price">{item.price}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="collection-cta">
-            <button className="btn-outline">View All Pieces</button>
-          </div>
-        </section>
 
         {/*  FEATURED BANNER  */}
         <section className="featured" id="featured">
@@ -125,7 +71,6 @@ function HomePage() {
                 Handpicked from our finest artisans. Each piece is crafted with
                 intention — designed to last beyond every season.
               </p>
-              <button className="btn-primary">Shop the Drop</button>
             </div>
             <div className="featured-visual">
               <div className="featured-card featured-card--back" />

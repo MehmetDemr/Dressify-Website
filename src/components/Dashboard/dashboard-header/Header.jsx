@@ -5,28 +5,28 @@ import { API_BASE_URL } from "../../../../config";
 import "./Header.css";
 
 function getInitials(userName, email) {
-  if (userName && userName.length >= 2) {
+  if (userName && userName.length >= 2)
     return userName.slice(0, 2).toUpperCase();
-  }
-  if (email) {
-    return email.slice(0, 2).toUpperCase();
-  }
+  if (email) return email.slice(0, 2).toUpperCase();
   return "??";
 }
 
 function DashboardHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [user, setUser] = useState(null);
   const menuRef = useRef(null);
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [pinnedDropdown, setPinnedDropdown] = useState(null);
+  const [mobileExpanded, setMobileExpanded] = useState(null);
   const closeTimerRef = useRef(null);
+  const navRef = useRef(null);
 
   const groupedCategories = brands.map((brand) => ({
     ...brand,
-    categories: categories.filter((category) => category.brand_id === brand.id),
+    categories: categories.filter((c) => c.brand_id === brand.id),
   }));
 
   function clearCloseTimer() {
@@ -43,7 +43,6 @@ function DashboardHeader() {
 
   function scheduleClose(name) {
     if (pinnedDropdown === name) return;
-
     clearCloseTimer();
     closeTimerRef.current = setTimeout(() => {
       setOpenDropdown((prev) => (prev === name ? null : prev));
@@ -52,13 +51,11 @@ function DashboardHeader() {
 
   function togglePinnedMenu(name) {
     clearCloseTimer();
-
     if (pinnedDropdown === name) {
       setPinnedDropdown(null);
       setOpenDropdown(null);
       return;
     }
-
     setPinnedDropdown(name);
     setOpenDropdown(name);
   }
@@ -68,35 +65,27 @@ function DashboardHeader() {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(`${API_BASE_URL}/user/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
-        if (json.success) {
-          setUser(json.data);
-        }
+        if (json.success) setUser(json.data);
       } catch (err) {
-        console.error("Kullanıcı bilgisi alınamadı:", err);
+        console.error(err);
       }
     }
     fetchUser();
   }, []);
 
-  const navRef = useRef(null);
   useEffect(() => {
     function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (menuRef.current && !menuRef.current.contains(e.target))
         setMenuOpen(false);
-      }
-
       if (navRef.current && !navRef.current.contains(e.target)) {
         clearCloseTimer();
         setOpenDropdown(null);
         setPinnedDropdown(null);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [pinnedDropdown]);
@@ -112,19 +101,22 @@ function DashboardHeader() {
           fetch(`${API_BASE_URL}/brand`),
           fetch(`${API_BASE_URL}/category`),
         ]);
-
         const brandJson = await brandRes.json();
         const categoryJson = await categoryRes.json();
-
         if (brandJson.success) setBrands(brandJson.data);
         if (categoryJson.success) setCategories(categoryJson.data);
       } catch (err) {
-        console.error("Navbar data error:", err);
+        console.error(err);
       }
     }
-
     fetchNavData();
   }, []);
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
 
   const initials = user ? getInitials(user.userName, user.email) : "..";
   const displayName = user?.userName ?? "—";
@@ -139,7 +131,7 @@ function DashboardHeader() {
         </Link>
       </div>
 
-      {/* Center Nav */}
+      {/* Center Nav — desktop */}
       <nav className="dash-nav" ref={navRef}>
         <Link to="/dashboard" className="dash-nav-link">
           Ana Sayfa
@@ -152,16 +144,12 @@ function DashboardHeader() {
         >
           <button
             type="button"
-            className={`dash-nav-link dash-nav-trigger ${
-              openDropdown === "brands" ? "active" : ""
-            }`}
+            className={`dash-nav-link dash-nav-trigger ${openDropdown === "brands" ? "active" : ""}`}
             onClick={() => togglePinnedMenu("brands")}
           >
             <span>Markalar</span>
             <svg
-              className={`dash-nav-chevron ${
-                openDropdown === "brands" ? "open" : ""
-              }`}
+              className={`dash-nav-chevron ${openDropdown === "brands" ? "open" : ""}`}
               width="12"
               height="12"
               viewBox="0 0 24 24"
@@ -172,7 +160,6 @@ function DashboardHeader() {
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
-
           {openDropdown === "brands" && (
             <div
               className="dash-dropdown"
@@ -203,16 +190,12 @@ function DashboardHeader() {
         >
           <button
             type="button"
-            className={`dash-nav-link dash-nav-trigger ${
-              openDropdown === "categories" ? "active" : ""
-            }`}
+            className={`dash-nav-link dash-nav-trigger ${openDropdown === "categories" ? "active" : ""}`}
             onClick={() => togglePinnedMenu("categories")}
           >
             <span>Kategoriler</span>
             <svg
-              className={`dash-nav-chevron ${
-                openDropdown === "categories" ? "open" : ""
-              }`}
+              className={`dash-nav-chevron ${openDropdown === "categories" ? "open" : ""}`}
               width="12"
               height="12"
               viewBox="0 0 24 24"
@@ -223,7 +206,6 @@ function DashboardHeader() {
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
-
           {openDropdown === "categories" && (
             <div
               className="dash-dropdown dash-dropdown--nested"
@@ -231,7 +213,7 @@ function DashboardHeader() {
               onMouseLeave={() => scheduleClose("categories")}
             >
               {groupedCategories
-                .filter((brand) => brand.categories.length > 0)
+                .filter((b) => b.categories.length > 0)
                 .map((brand) => (
                   <div key={brand.id} className="dash-dropdown-group">
                     <div className="dash-dropdown-parent">
@@ -247,7 +229,6 @@ function DashboardHeader() {
                         <polyline points="9 18 15 12 9 6" />
                       </svg>
                     </div>
-
                     <div className="dash-sub-dropdown">
                       {brand.categories.map((category) => (
                         <Link
@@ -274,11 +255,9 @@ function DashboardHeader() {
         </Link>
       </nav>
 
-      {/* Right — Icons + User */}
+      {/* Right */}
       <div className="dash-header-right">
-        {/* Wishlist */}
-
-        <a href="/dashboard/favourite">
+        <Link to="/dashboard/favourite">
           <button className="dash-icon-btn" aria-label="Favoriler">
             <svg
               width="16"
@@ -291,8 +270,7 @@ function DashboardHeader() {
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
           </button>
-        </a>
-        {/* Cart */}
+        </Link>
 
         <Link to="/dashboard/card">
           <button className="dash-icon-btn dash-cart-btn" aria-label="Sepet">
@@ -312,7 +290,7 @@ function DashboardHeader() {
           </button>
         </Link>
 
-        {/* User Avatar + Dropdown */}
+        {/* User Avatar */}
         <div className="dash-user-wrapper" ref={menuRef}>
           <button
             className={`dash-avatar ${menuOpen ? "open" : ""}`}
@@ -324,7 +302,6 @@ function DashboardHeader() {
 
           {menuOpen && (
             <div className="dash-user-modal">
-              {/* Top — user info */}
               <div className="dash-user-modal-top">
                 <div className="dash-modal-avatar">{initials}</div>
                 <div className="dash-modal-user-info">
@@ -339,10 +316,7 @@ function DashboardHeader() {
                   )}
                 </div>
               </div>
-
               <div className="dash-modal-divider" />
-
-              {/* Status row */}
               {user && (
                 <div className="dash-modal-status-row">
                   <div className="dash-status-item">
@@ -378,9 +352,7 @@ function DashboardHeader() {
                   )}
                 </div>
               )}
-
               <div className="dash-modal-divider" />
-
               <nav className="dash-modal-nav">
                 <Link
                   to="/dashboard/profile"
@@ -400,7 +372,6 @@ function DashboardHeader() {
                   </svg>
                   Profilim
                 </Link>
-
                 <Link
                   to="/dashboard/favourite"
                   className="dash-modal-item"
@@ -418,7 +389,6 @@ function DashboardHeader() {
                   </svg>
                   Favorilerim
                 </Link>
-
                 <Link
                   to="/dashboard/settings"
                   className="dash-modal-item"
@@ -438,10 +408,9 @@ function DashboardHeader() {
                   Ayarlar
                 </Link>
               </nav>
-
               <div className="dash-modal-divider" />
-
-              <button className="dash-modal-logout">
+              <button className="dash-modal-logout" onClick={handleLogout}>
+                {" "}
                 <svg
                   width="14"
                   height="14"
@@ -459,6 +428,121 @@ function DashboardHeader() {
             </div>
           )}
         </div>
+
+        {/* Hamburger */}
+        <button
+          className={`dash-hamburger ${mobileNavOpen ? "dash-hamburger--open" : ""}`}
+          onClick={() => setMobileNavOpen((v) => !v)}
+          aria-label="Menü"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
+
+      {/* Mobile Nav Drawer */}
+      <div
+        className={`dash-mobile-nav ${mobileNavOpen ? "dash-mobile-nav--open" : ""}`}
+      >
+        <Link
+          to="/dashboard"
+          className="dash-mobile-link"
+          onClick={() => setMobileNavOpen(false)}
+        >
+          Ana Sayfa
+        </Link>
+
+        {/* Markalar accordion */}
+        <div className="dash-mobile-group">
+          <button
+            className="dash-mobile-trigger"
+            onClick={() =>
+              setMobileExpanded((v) => (v === "brands" ? null : "brands"))
+            }
+          >
+            Markalar
+            <svg
+              className={`dash-nav-chevron ${mobileExpanded === "brands" ? "open" : ""}`}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {mobileExpanded === "brands" && (
+            <div className="dash-mobile-sub">
+              {brands.map((brand) => (
+                <Link
+                  key={brand.id}
+                  to={`/dashboard/${brand.brandSlug}`}
+                  className="dash-mobile-sub-link"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  {brand.brandName}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Categories accordion */}
+        <div className="dash-mobile-group">
+          <button
+            className="dash-mobile-trigger"
+            onClick={() =>
+              setMobileExpanded((v) =>
+                v === "categories" ? null : "categories",
+              )
+            }
+          >
+            Kategoriler
+            <svg
+              className={`dash-nav-chevron ${mobileExpanded === "categories" ? "open" : ""}`}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {mobileExpanded === "categories" && (
+            <div className="dash-mobile-sub">
+              {groupedCategories
+                .filter((b) => b.categories.length > 0)
+                .map((brand) => (
+                  <div key={brand.id}>
+                    <p className="dash-mobile-group-label">{brand.brandName}</p>
+                    {brand.categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/dashboard/${brand.brandSlug}/${category.categorySlug}`}
+                        className="dash-mobile-sub-link"
+                        onClick={() => setMobileNavOpen(false)}
+                      >
+                        {category.categoryName}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        <Link
+          to="/dashboard/events"
+          className="dash-mobile-link"
+          onClick={() => setMobileNavOpen(false)}
+        >
+          Etkinliklerim
+        </Link>
       </div>
     </header>
   );

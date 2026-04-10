@@ -6,7 +6,7 @@ import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
 
 const TYPE_META = {
   shopping: {
-    label: "Alışveriş",
+    label: "Shopping",
     badgeCls: "ua-badge ua-badge--shopping",
     iconColor: "#C9A96E",
     iconBg: "rgba(201,169,110,0.12)",
@@ -26,7 +26,7 @@ const TYPE_META = {
     ),
   },
   addingFavourite: {
-    label: "Favorileme",
+    label: "Favourited",
     badgeCls: "ua-badge ua-badge--fav",
     iconColor: "#D97070",
     iconBg: "rgba(201,90,90,0.1)",
@@ -44,7 +44,7 @@ const TYPE_META = {
     ),
   },
   click: {
-    label: "Tıklama",
+    label: "Click",
     badgeCls: "ua-badge ua-badge--click",
     iconColor: "#5C9FE8",
     iconBg: "rgba(52,130,246,0.1)",
@@ -65,15 +65,15 @@ const TYPE_META = {
 };
 
 const FILTERS = [
-  { key: "all", label: "Tümü" },
-  { key: "shopping", label: "Alışveriş" },
-  { key: "click", label: "Tıklama" },
-  { key: "addingFavourite", label: "Favoriler" },
+  { key: "all", label: "All" },
+  { key: "shopping", label: "Shopping" },
+  { key: "click", label: "Clicks" },
+  { key: "addingFavourite", label: "Favourites" },
 ];
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("tr-TR", {
+  return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -122,7 +122,7 @@ function ActivityRow({ activity }) {
         {meta.icon}
       </div>
       <div className="ua-act-info">
-        <div className="ua-act-name">{activity.product_id || "Ürün"}</div>
+        <div className="ua-act-name">{activity.product_id || "Product"}</div>
         <div className="ua-act-meta">
           {activity.brand_id} · {activity.category_id}
         </div>
@@ -147,7 +147,7 @@ function EmptyState() {
         <circle cx="12" cy="12" r="10" />
         <path d="M12 8v4M12 16h.01" />
       </svg>
-      <p>Bu filtrede aktivite bulunamadı.</p>
+      <p>No activity found for this filter.</p>
     </div>
   );
 }
@@ -169,7 +169,7 @@ function UserActivityPage() {
           setActivities(Array.isArray(json.data) ? json.data : [json.data]);
         }
       } catch (err) {
-        console.error("Aktivite verisi alınamadı:", err);
+        console.error("Failed to fetch activity data:", err);
       } finally {
         setLoading(false);
       }
@@ -218,36 +218,36 @@ function UserActivityPage() {
       <main className="ua-page">
         <div className="ua-content">
           {/* Page title */}
-          <p className="ua-page-label">Hesabım</p>
-          <h1 className="ua-page-heading">Aktivite Geçmişim</h1>
+          <p className="ua-page-label">My Account</p>
+          <h1 className="ua-page-heading">Activity History</h1>
 
           {/* Metric cards */}
           <div className="ua-metrics">
             <MetricCard
-              label="Toplam Aktivite"
+              label="Total Activity"
               value={counts.total}
-              sub="Tüm zamanlar"
+              sub="All time"
               badge="+12%"
               badgeType="up"
             />
             <MetricCard
-              label="Alışveriş"
+              label="Shopping"
               value={counts.shopping}
-              sub="Ürün satın alındı"
+              sub="Products purchased"
               badge="+8%"
               badgeType="up"
             />
             <MetricCard
-              label="Favorileme"
+              label="Favourited"
               value={counts.addingFavourite}
-              sub="Listeye eklendi"
+              sub="Added to list"
               badge="+24%"
               badgeType="up"
             />
             <MetricCard
-              label="Tıklama"
+              label="Clicks"
               value={counts.click}
-              sub="Ürün görüntüleme"
+              sub="Product views"
               badge="-3%"
               badgeType="down"
             />
@@ -256,9 +256,9 @@ function UserActivityPage() {
           {/* Brand & Category bars */}
           <div className="ua-grid-equal">
             <div className="ua-card">
-              <div className="ua-card-title">En Çok Etkileşim — Marka</div>
+              <div className="ua-card-title">Most Engaged — Brand</div>
               {brandSorted.length === 0 ? (
-                <p className="ua-empty-inline">Henüz veri yok</p>
+                <p className="ua-empty-inline">No data yet</p>
               ) : (
                 brandSorted.map(([name, count], i) => (
                   <BarRow
@@ -272,9 +272,9 @@ function UserActivityPage() {
               )}
             </div>
             <div className="ua-card">
-              <div className="ua-card-title">En Çok Gezilen Kategori</div>
+              <div className="ua-card-title">Most Browsed Categories</div>
               {catSorted.length === 0 ? (
-                <p className="ua-empty-inline">Henüz veri yok</p>
+                <p className="ua-empty-inline">No data yet</p>
               ) : (
                 catSorted.map(([name, count]) => (
                   <BarRow key={name} label={name} count={count} max={catMax} />
@@ -299,12 +299,12 @@ function UserActivityPage() {
               ))}
             </div>
 
-            <div className="ua-card-title">Son Aktiviteler</div>
+            <div className="ua-card-title">Recent Activity</div>
 
             {loading ? (
               <div className="ua-loading">
                 <div className="ua-spinner" />
-                <span>Yükleniyor...</span>
+                <span>Loading...</span>
               </div>
             ) : filtered.length === 0 ? (
               <EmptyState />

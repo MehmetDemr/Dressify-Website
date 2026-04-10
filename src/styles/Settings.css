@@ -76,7 +76,9 @@
   color: var(--text-gray);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   width: 100%;
 }
 
@@ -121,6 +123,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
+  width: 100%;
 }
 
 .stg-section-head {
@@ -205,7 +208,9 @@
   background: #f0f0f0;
   cursor: pointer;
   position: relative;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
   padding: 0;
 }
 
@@ -222,7 +227,9 @@
   height: 16px;
   border-radius: 50%;
   background: #bbb;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .stg-toggle.on .stg-toggle-thumb {
@@ -552,4 +559,135 @@
   text-align: center;
   padding: 20px 0 8px;
   letter-spacing: 0.04em;
+}
+@media (max-width: 768px) {
+  /* Layout & Hero */
+  .stg-main {
+    padding: 24px 20px 48px;
+    gap: 24px;
+  }
+
+  .stg-hero {
+    padding-bottom: 20px;
+  }
+
+  .stg-hero-title {
+    font-size: 32px;
+  }
+
+  .stg-body {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* Sidebar to Top Scrollable Nav */
+  .stg-sidebar {
+    width: 100%;
+    position: static;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .stg-nav {
+    flex-direction: row;
+    gap: 8px;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stg-nav-item {
+    width: auto;
+    padding: 8px 16px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* Content & Sections */
+  .stg-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .stg-section-head {
+    padding: 18px 20px;
+  }
+
+  .stg-section-body {
+    width: 100%;
+  }
+
+  .stg-row {
+    padding: 14px 20px;
+    flex-wrap: wrap;
+  }
+
+  .stg-row-label {
+    font-size: 12px;
+  }
+
+  .stg-row-control {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Form Elements (Account & Appearance) */
+  .stg-form {
+    padding: 16px 20px; 
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .stg-field,
+  .stg-input,
+  .stg-select,
+  .stg-save-btn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Cards & Lists (Payment & Addresses) */
+  .stg-card-list {
+    padding: 8px 16px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stg-card {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .stg-card-remove,
+  .stg-danger-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .stg-add-btn {
+    width: calc(100% - 32px);
+    margin: 12px 16px 16px;
+  }
+
+  /* Danger Zone */
+  .stg-danger-zone {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    gap: 16px;
+  }
+  .stg-hero{
+    padding-top:55px;
+  }
 }

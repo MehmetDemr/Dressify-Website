@@ -431,3 +431,96 @@
     background-position: -200% 0;
   }
 }
+
+@media (max-width: 768px) {
+  .pdp-main {
+    padding: 16px 14px 40px;
+    gap: 16px;
+  }
+ 
+  /* Breadcrumb küçült */
+  .pdp-breadcrumb {
+    gap: 5px;
+    padding-top:65px;
+  }
+ 
+  .pdp-breadcrumb a,
+  .pdp-breadcrumb span,
+  .pdp-breadcrumb-current {
+    font-size: 10px;
+  }
+ 
+  /* Body: yan yana → alt alta */
+  .pdp-body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+ 
+  /* Resim kare orana yakın, tam genişlik */
+  .pdp-img-wrap {
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+  }
+ 
+  /* Başlık ve fiyat küçült */
+  .pdp-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+ 
+  .pdp-price {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+ 
+  .pdp-info {
+    padding-top: 0;
+  }
+ 
+  .pdp-divider {
+    margin: 14px 0;
+  }
+ 
+  /* Sepete ekle butonu tam genişlik */
+  .pdp-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    height: 35px;
+  }
+ 
+  .pdp-cart-btn {
+    width: 100%;
+    font-size: 12px;
+  }
+ 
+  .pdp-qty {
+    width: 100%;
+    justify-content: space-between;
+    height: 46px;
+  }
+ 
+  /* Meta tablo */
+  .pdp-meta-row {
+    padding: 10px 14px;
+  }
+ 
+  .pdp-meta-key {
+    font-size: 9px;
+  }
+ 
+  .pdp-meta-val {
+    font-size: 11px;
+  }
+ 
+  /* Error butonu tam genişlik */
+  .pdp-error button {
+    width: 100%;
+  }
+ 
+  /* Skeleton body da alt alta */
+  .pdp-body .pdp-img-wrap.skeleton-box {
+    aspect-ratio: 1 / 1;
+  }
+}

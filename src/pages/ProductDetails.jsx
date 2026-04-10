@@ -34,26 +34,26 @@ function ProductDetailsPage() {
 
         const listRes = await fetch(`${API_BASE_URL}/product`, { headers });
         const listJson = await listRes.json();
-        if (!listJson.success) throw new Error("Ürünler alınamadı.");
+        if (!listJson.success) throw new Error("The products could not be received.");
 
         const match = (listJson.data || []).find(
           (p) => p.productSlug === productSlug,
         );
-        if (!match) throw new Error("Ürün bulunamadı.");
+        if (!match) throw new Error("Product not found.");
 
         const detailRes = await fetch(`${API_BASE_URL}/product/${match.id}`, {
           headers,
         });
         const detailJson = await detailRes.json();
         if (!detailJson.success) {
-          throw new Error(detailJson.message || "Ürün detayı alınamadı.");
+          throw new Error(detailJson.message || "Product details could not be retrieved.");
         }
 
         setProduct(detailJson.data);
         setLiked(!!detailJson.data.isFavourite);
         setFavouriteId(detailJson.data.favouriteId || null);
       } catch (err) {
-        setError(err.message || "Bir hata oluştu.");
+        setError(err.message || "An error occured.");
       } finally {
         setLoading(false);
       }
@@ -67,7 +67,7 @@ function ProductDetailsPage() {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Favorilere eklemek için giriş yapmalısınız.");
+      alert("You must log in to add to favorites.");
       return;
     }
 
@@ -141,11 +141,11 @@ function ProductDetailsPage() {
             : prev,
         );
       } else {
-        alert(data.message || "Favori işlemi başarısız.");
+        alert(data.message || "Favorite operation failed.");
       }
     } catch (error) {
-      console.error("Favori işlemi hatası:", error);
-      alert("Bir hata oluştu.");
+      console.error("Favorite function error:", error);
+      alert("An error occured.");
     } finally {
       setLikeLoading(false);
     }
@@ -189,7 +189,7 @@ function ProductDetailsPage() {
       <main className="pdp-main">
         {!loading && !error && (
           <nav className="pdp-breadcrumb">
-            <a href="/dashboard">Ana Sayfa</a>
+            <a href="/dashboard">Main Page</a>
             <span>/</span>
             {brand && (
               <>
@@ -217,7 +217,7 @@ function ProductDetailsPage() {
           <div className="pdp-error">
             <p>{error}</p>
             <button onClick={() => window.location.reload()} type="button">
-              Tekrar Dene
+              Try Again
             </button>
           </div>
         )}
@@ -273,7 +273,7 @@ function ProductDetailsPage() {
                 </div>
               )}
 
-              {isNew && <span className="pdp-img-badge">Yeni</span>}
+              {isNew && <span className="pdp-img-badge">New</span>}
 
               <button
                 type="button"
@@ -317,7 +317,7 @@ function ProductDetailsPage() {
 
               {product.description && (
                 <div className="pdp-desc-wrap">
-                  <p className="pdp-desc-label">Ürün Açıklaması</p>
+                  <p className="pdp-desc-label">Product Description</p>
                   <p className="pdp-desc">{product.description}</p>
                 </div>
               )}
@@ -328,8 +328,8 @@ function ProductDetailsPage() {
                 />
                 <span className="pdp-stock-label">
                   {product.stock > 0
-                    ? `Stokta ${product.stock} adet`
-                    : "Stok tükendi"}
+                    ? `${product.stock} in stock`
+                    : "Out of stock"}
                 </span>
               </div>
 
@@ -343,42 +343,32 @@ function ProductDetailsPage() {
                   disabled={cartLoading || product.stock === 0}
                 >
                   {addedToCart
-                    ? "Sepete Eklendi"
+                    ? "Added to Card"
                     : cartLoading
-                      ? "Ekleniyor..."
+                      ? "Adding..."
                       : product.stock === 0
-                        ? "Stok Tükendi"
-                        : "Sepete Ekle"}
+                        ? "Out of stock"
+                        : "Add to Card"}
                 </button>
               </div>
 
               <div className="pdp-meta">
                 <div className="pdp-meta-row">
-                  <span className="pdp-meta-key">Ürün Kodu</span>
+                  <span className="pdp-meta-key">Product code</span>
                   <span className="pdp-meta-val">
                     {product.id.slice(0, 8).toUpperCase()}
                   </span>
                 </div>
                 <div className="pdp-meta-row">
-                  <span className="pdp-meta-key">Kategori</span>
+                  <span className="pdp-meta-key">Category</span>
                   <span className="pdp-meta-val">
                     {category?.categoryName || "—"}
                   </span>
                 </div>
                 <div className="pdp-meta-row">
-                  <span className="pdp-meta-key">Marka</span>
+                  <span className="pdp-meta-key">Brand</span>
                   <span className="pdp-meta-val">
                     {brand?.brandName || "—"}
-                  </span>
-                </div>
-                <div className="pdp-meta-row">
-                  <span className="pdp-meta-key">Eklenme Tarihi</span>
-                  <span className="pdp-meta-val">
-                    {new Date(product.createdAt).toLocaleDateString("tr-TR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
                   </span>
                 </div>
               </div>

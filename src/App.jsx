@@ -4,7 +4,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import BrandPage from "./pages/Brand";
-import CategoryPage from "./pages/Category";
 import ProfilePage from "./pages/Profile";
 import FavoritesPage from "./pages/Favourite";
 import SettingsPage from "./pages/Settings";
@@ -29,11 +28,6 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/dashboard/:brandSlug" element={<BrandPage />} />
-
-        <Route
-          path="/dashboard/:brandSlug/:categorySlug"
-          element={<CategoryPage />}
-        />
 
         <Route path="/dashboard/profile" element={<ProfilePage />} />
 

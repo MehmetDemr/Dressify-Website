@@ -17,17 +17,14 @@ function DashboardHeader() {
   const [user, setUser] = useState(null);
   const menuRef = useRef(null);
   const [brands, setBrands] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [pinnedDropdown, setPinnedDropdown] = useState(null);
   const [mobileExpanded, setMobileExpanded] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
+
   const closeTimerRef = useRef(null);
   const navRef = useRef(null);
 
-  const groupedCategories = brands.map((brand) => ({
-    ...brand,
-    categories: categories.filter((c) => c.brand_id === brand.id),
-  }));
 
   function clearCloseTimer() {
     if (closeTimerRef.current) {
@@ -97,19 +94,39 @@ function DashboardHeader() {
   useEffect(() => {
     async function fetchNavData() {
       try {
-        const [brandRes, categoryRes] = await Promise.all([
+        const [brandRes] = await Promise.all([
           fetch(`${API_BASE_URL}/brand`),
-          fetch(`${API_BASE_URL}/category`),
         ]);
         const brandJson = await brandRes.json();
-        const categoryJson = await categoryRes.json();
         if (brandJson.success) setBrands(brandJson.data);
-        if (categoryJson.success) setCategories(categoryJson.data);
       } catch (err) {
         console.error(err);
       }
     }
     fetchNavData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchCartCount() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await fetch(`${API_BASE_URL}/card`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+        if (json.success) {
+          const total = (json.data || []).reduce(
+            (sum, item) => sum + (item.quantity || 1),
+            0,
+          );
+          setCartCount(total);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchCartCount();
   }, []);
 
   const handleLogout = () => {
@@ -134,7 +151,7 @@ function DashboardHeader() {
       {/* Center Nav — desktop */}
       <nav className="dash-nav" ref={navRef}>
         <Link to="/dashboard" className="dash-nav-link">
-          Ana Sayfa
+          HomePage
         </Link>
 
         <div
@@ -147,7 +164,7 @@ function DashboardHeader() {
             className={`dash-nav-link dash-nav-trigger ${openDropdown === "brands" ? "active" : ""}`}
             onClick={() => togglePinnedMenu("brands")}
           >
-            <span>Markalar</span>
+            <span>Brands</span>
             <svg
               className={`dash-nav-chevron ${openDropdown === "brands" ? "open" : ""}`}
               width="12"
@@ -182,76 +199,8 @@ function DashboardHeader() {
             </div>
           )}
         </div>
-
-        <div
-          className="dash-nav-item"
-          onMouseEnter={() => openMenu("categories")}
-          onMouseLeave={() => scheduleClose("categories")}
-        >
-          <button
-            type="button"
-            className={`dash-nav-link dash-nav-trigger ${openDropdown === "categories" ? "active" : ""}`}
-            onClick={() => togglePinnedMenu("categories")}
-          >
-            <span>Kategoriler</span>
-            <svg
-              className={`dash-nav-chevron ${openDropdown === "categories" ? "open" : ""}`}
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          {openDropdown === "categories" && (
-            <div
-              className="dash-dropdown dash-dropdown--nested"
-              onMouseEnter={clearCloseTimer}
-              onMouseLeave={() => scheduleClose("categories")}
-            >
-              {groupedCategories
-                .filter((b) => b.categories.length > 0)
-                .map((brand) => (
-                  <div key={brand.id} className="dash-dropdown-group">
-                    <div className="dash-dropdown-parent">
-                      <span>{brand.brandName} Kategorileri</span>
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </div>
-                    <div className="dash-sub-dropdown">
-                      {brand.categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          to={`/dashboard/${brand.brandSlug}/${category.categorySlug}`}
-                          className="dash-dropdown-item"
-                          onClick={() => {
-                            setOpenDropdown(null);
-                            setPinnedDropdown(null);
-                          }}
-                        >
-                          {category.categoryName}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-
         <Link to="/dashboard/events" className="dash-nav-link">
-          Etkinliklerim
+          Activities
         </Link>
       </nav>
 
@@ -286,7 +235,11 @@ function DashboardHeader() {
               <line x1="3" y1="6" x2="21" y2="6" />
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
-            <span className="dash-cart-badge">3</span>
+            {cartCount > 0 && (
+              <span className="dash-cart-badge">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </button>
         </Link>
 
@@ -486,52 +439,6 @@ function DashboardHeader() {
                   {brand.brandName}
                 </Link>
               ))}
-            </div>
-          )}
-        </div>
-
-        {/* Categories accordion */}
-        <div className="dash-mobile-group">
-          <button
-            className="dash-mobile-trigger"
-            onClick={() =>
-              setMobileExpanded((v) =>
-                v === "categories" ? null : "categories",
-              )
-            }
-          >
-            Kategoriler
-            <svg
-              className={`dash-nav-chevron ${mobileExpanded === "categories" ? "open" : ""}`}
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          {mobileExpanded === "categories" && (
-            <div className="dash-mobile-sub">
-              {groupedCategories
-                .filter((b) => b.categories.length > 0)
-                .map((brand) => (
-                  <div key={brand.id}>
-                    <p className="dash-mobile-group-label">{brand.brandName}</p>
-                    {brand.categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        to={`/dashboard/${brand.brandSlug}/${category.categorySlug}`}
-                        className="dash-mobile-sub-link"
-                        onClick={() => setMobileNavOpen(false)}
-                      >
-                        {category.categoryName}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
             </div>
           )}
         </div>

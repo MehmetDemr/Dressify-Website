@@ -3,7 +3,7 @@ import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
 import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import "../styles/Settings.css";
 
-/*  Toggle Switch  */
+/* Toggle Switch  */
 function Toggle({ checked, onChange }) {
   return (
     <button
@@ -18,7 +18,7 @@ function Toggle({ checked, onChange }) {
   );
 }
 
-/*  Section Wrapper  */
+/* Section Wrapper  */
 function Section({ title, description, children }) {
   return (
     <div className="stg-section">
@@ -31,7 +31,7 @@ function Section({ title, description, children }) {
   );
 }
 
-/*  Row  */
+/* Row  */
 function Row({ label, sublabel, children }) {
   return (
     <div className="stg-row">
@@ -44,7 +44,7 @@ function Row({ label, sublabel, children }) {
   );
 }
 
-/*  Saved Card  */
+/* Saved Card  */
 function SavedCard({ last4, brand, expiry, onRemove }) {
   return (
     <div className="stg-card">
@@ -65,17 +65,17 @@ function SavedCard({ last4, brand, expiry, onRemove }) {
         <div>
           <p className="stg-card-brand">{brand}</p>
           <p className="stg-card-number">•••• •••• •••• {last4}</p>
-          <p className="stg-card-expiry">Son kullanma: {expiry}</p>
+          <p className="stg-card-expiry">Expiry: {expiry}</p>
         </div>
       </div>
       <button className="stg-card-remove" onClick={onRemove} type="button">
-        Kaldır
+        Remove
       </button>
     </div>
   );
 }
 
-/*  Address Card  */
+/* Address Card  */
 function AddressCard({ title, address, onRemove }) {
   return (
     <div className="stg-card">
@@ -101,17 +101,17 @@ function AddressCard({ title, address, onRemove }) {
         </div>
       </div>
       <button className="stg-card-remove" onClick={onRemove} type="button">
-        Kaldır
+        Remove
       </button>
     </div>
   );
 }
 
-/*  Nav items  */
+/* Nav items  */
 const NAV_ITEMS = [
   {
     id: "notifications",
-    label: "Bildirimler",
+    label: "Notifications",
     icon: (
       <svg
         width="15"
@@ -128,7 +128,7 @@ const NAV_ITEMS = [
   },
   {
     id: "payment",
-    label: "Ödeme Yöntemleri",
+    label: "Payment Methods",
     icon: (
       <svg
         width="15"
@@ -145,7 +145,7 @@ const NAV_ITEMS = [
   },
   {
     id: "addresses",
-    label: "Adreslerim",
+    label: "Addresses",
     icon: (
       <svg
         width="15"
@@ -162,7 +162,7 @@ const NAV_ITEMS = [
   },
   {
     id: "privacy",
-    label: "Gizlilik & Güvenlik",
+    label: "Privacy & Security",
     icon: (
       <svg
         width="15"
@@ -176,10 +176,29 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-
+  {
+    id: "appearance",
+    label: "Appearance",
+    icon: (
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <circle cx="12" cy="12" r="5" />
+        <line x1="12" y1="1" x2="12" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="23" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      </svg>
+    ),
+  },
   {
     id: "account",
-    label: "Hesap",
+    label: "Account",
     icon: (
       <svg
         width="15"
@@ -196,7 +215,7 @@ const NAV_ITEMS = [
   },
 ];
 
-/*  Main  */
+/* Main  */
 function SettingsPage() {
   const [activeSection, setActiveSection] = useState("notifications");
 
@@ -221,17 +240,17 @@ function SettingsPage() {
   const [addresses, setAddresses] = useState([
     {
       id: 1,
-      title: "Ev",
-      address: "Bornova Mah. Atatürk Cad. No:12 D:3, Bornova / İzmir",
+      title: "Home",
+      address: "Bornova Mah. Ataturk Cad. No:12 D:3, Bornova / Izmir",
     },
     {
       id: 2,
-      title: "İş",
-      address: "Alsancak Mah. Kıbrıs Şehitleri Cad. No:48, Konak / İzmir",
+      title: "Work",
+      address: "Alsancak Mah. Kibris Sehitleri Cad. No:48, Konak / Izmir",
     },
   ]);
 
-  /* Gizlilik */
+  /* Privacy */
   const [privacy, setPrivacy] = useState({
     twoFactor: false,
     loginAlert: true,
@@ -239,14 +258,14 @@ function SettingsPage() {
     activityVisible: true,
   });
 
-  /* Görünüm */
+  /* Appearance */
   const [appearance, setAppearance] = useState({
-    language: "tr",
-    currency: "TRY",
+    language: "en",
+    currency: "USD",
     compactView: false,
   });
 
-  /* Hesap */
+  /* Account */
   const [account, setAccount] = useState({
     currentPassword: "",
     newPassword: "",
@@ -266,14 +285,14 @@ function SettingsPage() {
       <DashboardHeader />
 
       <main className="stg-main">
-        {/*  Page Hero  */}
+        {/* Page Hero  */}
         <div className="stg-hero">
-          <p className="stg-hero-eyebrow">Hesabım</p>
-          <h1 className="stg-hero-title">Ayarlar</h1>
+          <p className="stg-hero-eyebrow">My Account</p>
+          <h1 className="stg-hero-title">Settings</h1>
         </div>
 
         <div className="stg-body">
-          {/*  Sidebar  */}
+          {/* Sidebar  */}
           <aside className="stg-sidebar">
             <nav className="stg-nav">
               {NAV_ITEMS.map((item) => (
@@ -290,18 +309,18 @@ function SettingsPage() {
             </nav>
           </aside>
 
-          {/*  Content  */}
+          {/* Content  */}
           <div className="stg-content">
             {/* NOTIFICATIONS */}
             {activeSection === "notifications" && (
               <>
                 <Section
-                  title="E-posta Bildirimleri"
-                  description="Hangi konularda e-posta almak istediğinizi seçin."
+                  title="Email Notifications"
+                  description="Choose which topics you want to receive emails about."
                 >
                   <Row
-                    label="Yeni Ürünler"
-                    sublabel="Favori markalarınızın yeni koleksiyonları"
+                    label="New Products"
+                    sublabel="New collections from your favorite brands"
                   >
                     <Toggle
                       checked={notif.emailNewProduct}
@@ -310,23 +329,23 @@ function SettingsPage() {
                   </Row>
 
                   <Row
-                    label="İndirim ve Kampanyalar"
-                    sublabel="Anlık fırsat mesajları"
+                    label="Discounts and Campaigns"
+                    sublabel="Instant promotional messages"
                   >
                     <Toggle
-                      checked={notif.smsDiscount}
+                      checked={notif.emailDiscount}
                       onChange={() => toggleNotif("emailDiscount")}
                     />
                   </Row>
                 </Section>
 
                 <Section
-                  title="SMS Bildirimleri"
-                  description="Telefon numaranıza gönderilecek bildirimler."
+                  title="SMS Notifications"
+                  description="Notifications that will be sent to your phone number."
                 >
                   <Row
-                    label="İndirim ve Kampanyalar"
-                    sublabel="Anlık fırsat mesajları"
+                    label="Discounts and Campaigns"
+                    sublabel="Instant promotional messages"
                   >
                     <Toggle
                       checked={notif.smsDiscount}
@@ -335,23 +354,23 @@ function SettingsPage() {
                   </Row>
 
                   <Row
-                    label="Yeni Ürünler"
-                    sublabel="Favori markalarınızın yeni koleksiyonları"
+                    label="Order Status"
+                    sublabel="Updates about your shipping and delivery"
                   >
                     <Toggle
-                      checked={notif.emailNewProduct}
-                      onChange={() => toggleNotif("smsNewProduct")}
+                      checked={notif.smsOrder}
+                      onChange={() => toggleNotif("smsOrder")}
                     />
                   </Row>
                 </Section>
 
                 <Section
-                  title="Uygulama Bildirimleri"
-                  description="Tarayıcı ve mobil push bildirimleri."
+                  title="App Notifications"
+                  description="Browser and mobile push notifications."
                 >
                   <Row
-                    label="Tüm Bildirimler"
-                    sublabel="Genel uygulama bildirimleri"
+                    label="All Notifications"
+                    sublabel="General application notifications"
                   >
                     <Toggle
                       checked={notif.pushAll}
@@ -359,8 +378,8 @@ function SettingsPage() {
                     />
                   </Row>
                   <Row
-                    label="Favori Ürün Fiyat Düşüşü"
-                    sublabel="Favorilistenizdeki ürünler indirime girdiğinde"
+                    label="Favorite Product Price Drop"
+                    sublabel="When items in your wishlist go on sale"
                   >
                     <Toggle
                       checked={notif.pushFavorite}
@@ -375,12 +394,12 @@ function SettingsPage() {
             {activeSection === "payment" && (
               <>
                 <Section
-                  title="Kayıtlı Kartlar"
-                  description="Hızlı ödeme için kartlarınızı yönetin."
+                  title="Saved Cards"
+                  description="Manage your cards for faster checkout."
                 >
                   <div className="stg-card-list">
                     {cards.length === 0 && (
-                      <p className="stg-empty-note">Kayıtlı kart bulunmuyor.</p>
+                      <p className="stg-empty-note">No saved cards found.</p>
                     )}
                     {cards.map((card) => (
                       <SavedCard
@@ -404,7 +423,7 @@ function SettingsPage() {
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Yeni Kart Ekle
+                    Add New Card
                   </button>
                 </Section>
               </>
@@ -413,12 +432,12 @@ function SettingsPage() {
             {/* ADDRESSES */}
             {activeSection === "addresses" && (
               <Section
-                title="Adreslerim"
-                description="Teslimat adreslerinizi ekleyin ve yönetin."
+                title="My Addresses"
+                description="Add and manage your delivery addresses."
               >
                 <div className="stg-card-list">
                   {addresses.length === 0 && (
-                    <p className="stg-empty-note">Kayıtlı adres bulunmuyor.</p>
+                    <p className="stg-empty-note">No saved addresses found.</p>
                   )}
                   {addresses.map((addr) => (
                     <AddressCard
@@ -442,7 +461,7 @@ function SettingsPage() {
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Yeni Adres Ekle
+                  Add New Address
                 </button>
               </Section>
             )}
@@ -451,31 +470,22 @@ function SettingsPage() {
             {activeSection === "privacy" && (
               <>
                 <Section
-                  title="Güvenlik"
-                  description="Hesabınızın güvenliğini artırın."
+                  title="Security"
+                  description="Enhance your account security."
                 >
                   <Row
-                    label="İki Faktörlü Doğrulama"
-                    sublabel="Giriş yaparken SMS ile doğrulama kodu"
+                    label="Two-Factor Authentication"
+                    sublabel="Verification code via SMS when logging in"
                   >
                     <Toggle
                       checked={privacy.twoFactor}
-                      onChange={() => togglePrivacy("twoFactorSms")}
+                      onChange={() => togglePrivacy("twoFactor")}
                     />
                   </Row>
 
                   <Row
-                    label="İki Faktörlü Doğrulama"
-                    sublabel="Giriş yaparken email ile doğrulama kodu"
-                  >
-                    <Toggle
-                      checked={privacy.twoFactor}
-                      onChange={() => togglePrivacy("twoFactorEmail")}
-                    />
-                  </Row>
-                  <Row
-                    label="Yeni Giriş Bildirimi"
-                    sublabel="Hesabınıza yeni giriş yapıldığında e-posta al"
+                    label="Login Alerts"
+                    sublabel="Receive an email when a new login is detected"
                   >
                     <Toggle
                       checked={privacy.loginAlert}
@@ -484,17 +494,17 @@ function SettingsPage() {
                   </Row>
                 </Section>
 
-                <Section title="Tehlikeli Alan">
+                <Section title="Danger Zone">
                   <div className="stg-danger-zone">
                     <div>
-                      <p className="stg-danger-label">Hesabı Sil</p>
+                      <p className="stg-danger-label">Delete Account</p>
                       <p className="stg-danger-sub">
-                        Tüm verileriniz kalıcı olarak silinir, bu işlem geri
-                        alınamaz.
+                        All your data will be permanently deleted; this action
+                        cannot be undone.
                       </p>
                     </div>
                     <button className="stg-danger-btn" type="button">
-                      Hesabı Sil
+                      Delete Account
                     </button>
                   </div>
                 </Section>
@@ -505,10 +515,10 @@ function SettingsPage() {
             {activeSection === "appearance" && (
               <>
                 <Section
-                  title="Dil & Para Birimi"
-                  description="Tercih ettiğiniz dil ve para birimini seçin."
+                  title="Language & Currency"
+                  description="Select your preferred language and currency."
                 >
-                  <Row label="Dil" sublabel="Arayüz dilini seçin">
+                  <Row label="Language" sublabel="Choose interface language">
                     <select
                       className="stg-select"
                       value={appearance.language}
@@ -519,14 +529,14 @@ function SettingsPage() {
                         }))
                       }
                     >
-                      <option value="tr">Türkçe</option>
+                      <option value="tr">Turkish</option>
                       <option value="en">English</option>
-                      <option value="de">Deutsch</option>
+                      <option value="de">German</option>
                     </select>
                   </Row>
                   <Row
-                    label="Para Birimi"
-                    sublabel="Fiyatların gösterileceği para birimi"
+                    label="Currency"
+                    sublabel="Currency for displaying prices"
                   >
                     <select
                       className="stg-select"
@@ -538,20 +548,20 @@ function SettingsPage() {
                         }))
                       }
                     >
-                      <option value="TRY">₺ Türk Lirası</option>
-                      <option value="USD">$ Dolar</option>
+                      <option value="TRY">₺ Lira</option>
+                      <option value="USD">$ Dollar</option>
                       <option value="EUR">€ Euro</option>
                     </select>
                   </Row>
                 </Section>
 
                 <Section
-                  title="Görüntüleme"
-                  description="Ürün listesi görünümünü özelleştirin."
+                  title="Viewing Preferences"
+                  description="Customize the product list view."
                 >
                   <Row
-                    label="Kompakt Görünüm"
-                    sublabel="Ürün kartlarını daha küçük göster"
+                    label="Compact View"
+                    sublabel="Show smaller product cards"
                   >
                     <Toggle
                       checked={appearance.compactView}
@@ -568,12 +578,12 @@ function SettingsPage() {
             {activeSection === "account" && (
               <>
                 <Section
-                  title="Şifre Değiştir"
-                  description="Güvenliğiniz için şifrenizi düzenli olarak güncelleyin."
+                  title="Change Password"
+                  description="Regularly update your password for your security."
                 >
                   <div className="stg-form">
                     <div className="stg-field">
-                      <label className="stg-label">Mevcut Şifre</label>
+                      <label className="stg-label">Current Password</label>
                       <input
                         type="password"
                         className="stg-input"
@@ -588,7 +598,7 @@ function SettingsPage() {
                       />
                     </div>
                     <div className="stg-field">
-                      <label className="stg-label">Yeni Şifre</label>
+                      <label className="stg-label">New Password</label>
                       <input
                         type="password"
                         className="stg-input"
@@ -603,7 +613,7 @@ function SettingsPage() {
                       />
                     </div>
                     <div className="stg-field">
-                      <label className="stg-label">Yeni Şifre Tekrar</label>
+                      <label className="stg-label">Confirm New Password</label>
                       <input
                         type="password"
                         className="stg-input"
@@ -618,7 +628,7 @@ function SettingsPage() {
                       />
                     </div>
                     <button className="stg-save-btn" type="button">
-                      Şifreyi Güncelle
+                      Update Password
                     </button>
                   </div>
                 </Section>

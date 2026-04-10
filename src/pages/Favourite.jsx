@@ -89,7 +89,7 @@ function Pagination({
 function FavoriteCard({ fav, onRemove }) {
   const [removing, setRemoving] = useState(false);
 
-  const product = fav.product || {}; 
+  const product = fav.product || {};
   const brandName = product.brandName || "Dressify";
   const categoryName = product.categoryName || "";
   const imageUrl = product.imageUrl || null;
@@ -143,7 +143,8 @@ function FavoriteCard({ fav, onRemove }) {
           </svg>
         </button>
 
-        <button type="button" className="fav-add-cart">
+        {/* Sadece masaüstünde */}
+        <button type="button" className="fav-add-cart fav-add-cart--desktop">
           Sepete Ekle
         </button>
       </div>
@@ -153,13 +154,18 @@ function FavoriteCard({ fav, onRemove }) {
         <p className="fav-card-name">{productTitle}</p>
 
         <div className="fav-card-bottom">
-          <span className="fav-card-category">{categoryName}</span>{" "}
+          <span className="fav-card-category">{categoryName}</span>
           <span className="fav-card-price">
             {product.price != null
               ? `${Number(product.price).toLocaleString("tr-TR")}₺`
               : "—"}
           </span>
         </div>
+
+        {/* Sadece mobilde, detayın üstünde */}
+        <button type="button" className="fav-add-cart fav-add-cart--mobile">
+          Sepete Ekle
+        </button>
 
         <button
           type="button"

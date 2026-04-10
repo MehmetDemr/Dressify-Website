@@ -5,7 +5,6 @@ import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
 import "../styles/Brand.css";
 
-/*  Product Card (Brand sayfasına özel)  */
 function BrandProductCard({ product, brand, categories }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
@@ -22,7 +21,7 @@ function BrandProductCard({ product, brand, categories }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Favorilere eklemek için giriş yapmalısınız.");
+      alert("You must log in to add to favorites.");
       return;
     }
 
@@ -74,10 +73,10 @@ function BrandProductCard({ product, brand, categories }) {
         setLiked(data.isFavourite ?? !liked);
         setFavouriteId(data.isFavourite ? data.favouriteId || null : null);
       } else {
-        console.error("Favori işlemi başarısız:", data.message);
+        console.error("Favorite operation failed:", data.message);
       }
     } catch (error) {
-      console.error("İstek hatası:", error);
+      console.error("Request error:", error);
     } finally {
       setIsLiking(false);
     }
@@ -85,12 +84,12 @@ function BrandProductCard({ product, brand, categories }) {
 
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
-  const productTitle = product.productName || product.name || "İsimsiz Ürün";
+  const productTitle = product.productName || product.name || "Unnamed Product";
 
   const matchedCategory = categories.find(
     (c) => String(c.id) === String(product.category_id),
   );
-  const categoryName = matchedCategory?.categoryName || "Kategori";
+  const categoryName = matchedCategory?.categoryName || "Category";
 
   const detailUrl =
     brand?.brandSlug && matchedCategory?.categorySlug && product.productSlug
@@ -138,8 +137,8 @@ function BrandProductCard({ product, brand, categories }) {
           </svg>
         </button>
 
-        <button type="button" className="bp-add-cart">
-          Sepete Ekle
+        <button type="button" className="bp-add-cart bp-add-cart--desktop">
+          Add to Card
         </button>
       </div>
 
@@ -156,6 +155,10 @@ function BrandProductCard({ product, brand, categories }) {
           </span>
         </div>
 
+        <button type="button" className="bp-add-cart bp-add-cart--mobile">
+          Add to Card
+        </button>
+
         <button
           type="button"
           className="bp-detail-btn"
@@ -164,7 +167,7 @@ function BrandProductCard({ product, brand, categories }) {
           }}
           disabled={!detailUrl}
         >
-          Detay
+          Details
         </button>
       </div>
     </div>
@@ -230,33 +233,32 @@ function BrandPage() {
         ]);
 
         if (!brandJson.success)
-          throw new Error(brandJson.message || "Markalar alınamadı.");
+          throw new Error(brandJson.message || "The brands could not be acquired.");
         if (!categoryJson.success)
-          throw new Error(categoryJson.message || "Kategoriler alınamadı.");
+          throw new Error(
+            categoryJson.message || "The categories could not be acquired.",
+          );
         if (!productJson.success)
-          throw new Error(productJson.message || "Ürünler alınamadı.");
+          throw new Error(productJson.message || "The products could not be received.");
 
-        // Slug'a göre markayı bul
         const foundBrand = (brandJson.data || []).find(
           (b) => b.brandSlug === brandSlug,
         );
-        if (!foundBrand) throw new Error("Marka bulunamadı.");
+        if (!foundBrand) throw new Error("Brand not found.");
         setBrand(foundBrand);
 
-        // Bu markaya ait kategoriler
         const brandCategories = (categoryJson.data || []).filter(
           (c) => String(c.brand_id) === String(foundBrand.id),
         );
         setCategories(brandCategories);
 
-        // Bu kategorilere ait ürünler
         const brandCategoryIds = new Set(brandCategories.map((c) => c.id));
         const brandProducts = (productJson.data || []).filter((p) =>
           brandCategoryIds.has(p.category_id),
         );
         setProducts(brandProducts);
       } catch (err) {
-        setError(err.message || "Bir hata oluştu.");
+        setError(err.message || "An error occured.");
       } finally {
         setLoading(false);
       }
@@ -283,10 +285,10 @@ function BrandPage() {
             <div className="skeleton-line" style={{ width: 180, height: 36 }} />
           ) : error ? null : (
             <>
-              <p className="bp-hero-eyebrow">Marka Koleksiyonu</p>
+              <p className="bp-hero-eyebrow">Brand  Collection</p>
               <h1 className="bp-hero-title">{brand?.brandName}</h1>
               <p className="bp-hero-sub">
-                {filteredProducts.length} ürün
+                {filteredProducts.length} product
                 {activeCategory !== "all" &&
                 categories.find((c) => c.id === activeCategory)
                   ? ` — ${categories.find((c) => c.id === activeCategory).categoryName}`
@@ -299,14 +301,14 @@ function BrandPage() {
         <div className="bp-body">
           {/*  Sidebar Filters  */}
           <aside className="bp-sidebar">
-            <p className="bp-sidebar-title">Kategori</p>
+            <p className="bp-sidebar-title">Category</p>
             <ul className="bp-filter-list">
               <li>
                 <button
                   className={`bp-filter-item ${activeCategory === "all" ? "active" : ""}`}
                   onClick={() => setActiveCategory("all")}
                 >
-                  <span>Tümü</span>
+                  <span>All</span>
                   <span className="bp-filter-count">{products.length}</span>
                 </button>
               </li>
@@ -335,7 +337,7 @@ function BrandPage() {
               <div className="bp-error">
                 <p>{error}</p>
                 <button onClick={() => window.location.reload()}>
-                  Tekrar Dene
+                  Try Again
                 </button>
               </div>
             )}
@@ -360,7 +362,9 @@ function BrandPage() {
                     />
                   ))
                 ) : (
-                  <p className="bp-empty">Bu kategoride ürün bulunamadı.</p>
+                  <p className="bp-empty">
+                    No products were found in this category.
+                </p>
                 )}
               </div>
             )}

@@ -13,7 +13,7 @@ function CartItem({ item, onQuantityChange, onRemove }) {
   const brand = product?.category?.brand;
   const category = product?.category;
   const imageUrl = product?.imageUrl || null;
-  const productTitle = product?.productName || "İsimsiz Ürün";
+  const productTitle = product?.productName || "Unnamed Product";
 
   const detailUrl =
     brand?.brandSlug && category?.categorySlug && product?.productSlug
@@ -202,16 +202,16 @@ function EmptyCart() {
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
       </div>
-      <p className="cart-empty-title">Sepetiniz boş</p>
+      <p className="cart-empty-title">Your cart is empty</p>
       <p className="cart-empty-sub">
-        Beğendiğiniz ürünleri sepete ekleyerek alışverişe başlayın.
+        Start shopping by adding your favorite products to your cart.
       </p>
       <button
         className="cart-empty-btn"
         onClick={() => (window.location.href = "/dashboard")}
         type="button"
       >
-        Alışverişe Başla
+        Start Shopping
       </button>
     </div>
   );
@@ -224,18 +224,18 @@ function OrderSummary({ meta, itemCount }) {
 
   return (
     <div className="cart-summary">
-      <p className="cart-summary-title">Sipariş Özeti</p>
+      <p className="cart-summary-title">Order Summary</p>
 
       <div className="cart-summary-rows">
         <div className="cart-summary-row">
-          <span>Ürünler ({itemCount} adet)</span>
+          <span>Products ({itemCount} count)</span>
           <span>{Number(meta.total).toLocaleString("tr-TR")}₺</span>
         </div>
         <div className="cart-summary-row">
-          <span>Kargo</span>
+          <span>Cargo</span>
           <span className={shipping === 0 ? "cart-summary-free" : ""}>
             {shipping === 0
-              ? "Ücretsiz"
+              ? "Free"
               : `${shipping.toLocaleString("tr-TR")}₺`}
           </span>
         </div>
@@ -249,12 +249,12 @@ function OrderSummary({ meta, itemCount }) {
       <div className="cart-summary-divider" />
 
       <div className="cart-summary-total">
-        <span>Toplam</span>
+        <span>Total</span>
         <span>{Number(grand).toLocaleString("tr-TR")}₺</span>
       </div>
 
       <button className="cart-checkout-btn" type="button">
-        Siparişi Tamamla
+        Order
       </button>
 
       <button
@@ -262,7 +262,7 @@ function OrderSummary({ meta, itemCount }) {
         type="button"
         onClick={() => (window.location.href = "/dashboard")}
       >
-        Alışverişe Devam Et
+        Continue shopping
       </button>
     </div>
   );
@@ -290,12 +290,12 @@ function CartPage() {
         });
 
         const json = await res.json();
-        if (!json.success) throw new Error(json.message || "Sepet alınamadı.");
+        if (!json.success) throw new Error(json.message || "Could not retrieve basket.");
 
         setItems(json.data || []);
         setMeta(json.meta || { itemCount: 0, total: 0 });
       } catch (err) {
-        setError(err.message || "Bir hata oluştu.");
+        setError(err.message || "An error has occurred.");
       } finally {
         setLoading(false);
       }
@@ -342,10 +342,10 @@ function CartPage() {
       <main className="cart-main">
         {/* Hero */}
         <div className="cart-hero">
-          <p className="cart-hero-eyebrow">Hesabım</p>
-          <h1 className="cart-hero-title">Sepetim</h1>
+          <p className="cart-hero-eyebrow">My Account</p>
+          <h1 className="cart-hero-title">My Card</h1>
           {!loading && !error && items.length > 0 && (
-            <p className="cart-hero-sub">{meta.itemCount} ürün</p>
+            <p className="cart-hero-sub">{meta.itemCount} product</p>
           )}
         </div>
 
@@ -353,7 +353,7 @@ function CartPage() {
           <div className="cart-error">
             <p>{error}</p>
             <button onClick={() => window.location.reload()} type="button">
-              Tekrar Dene
+              Try Again
             </button>
           </div>
         )}

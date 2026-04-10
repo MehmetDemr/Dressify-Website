@@ -79,7 +79,7 @@ function Pagination({
         </button>
       </div>
       <p className="dash-pg-info">
-        {start}–{end} / {totalItems} ürün
+        {start}–{end} / {totalItems} product
       </p>
     </div>
   );
@@ -89,11 +89,11 @@ function Pagination({
 function FavoriteCard({ fav, onRemove }) {
   const [removing, setRemoving] = useState(false);
 
-  const product = fav.product || {}; 
+  const product = fav.product || {};
   const brandName = product.brandName || "Dressify";
   const categoryName = product.categoryName || "";
   const imageUrl = product.imageUrl || null;
-  const productTitle = product.productName || "İsimsiz Ürün";
+  const productTitle = product.productName || "Unnamed Product";
 
   async function handleRemove() {
     try {
@@ -143,8 +143,8 @@ function FavoriteCard({ fav, onRemove }) {
           </svg>
         </button>
 
-        <button type="button" className="fav-add-cart">
-          Sepete Ekle
+        <button type="button" className="fav-add-cart fav-add-cart--desktop">
+          Add to Card
         </button>
       </div>
 
@@ -153,13 +153,17 @@ function FavoriteCard({ fav, onRemove }) {
         <p className="fav-card-name">{productTitle}</p>
 
         <div className="fav-card-bottom">
-          <span className="fav-card-category">{categoryName}</span>{" "}
+          <span className="fav-card-category">{categoryName}</span>
           <span className="fav-card-price">
             {product.price != null
               ? `${Number(product.price).toLocaleString("tr-TR")}₺`
               : "—"}
           </span>
         </div>
+
+        <button type="button" className="fav-add-cart fav-add-cart--mobile">
+          Add to Card
+        </button>
 
         <button
           type="button"
@@ -170,7 +174,7 @@ function FavoriteCard({ fav, onRemove }) {
           }}
           disabled={!product.id}
         >
-          Detay
+          Details
         </button>
       </div>
     </div>
@@ -216,15 +220,16 @@ function EmptyFavorites() {
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </div>
-      <p className="fav-empty-title">Henüz favori ürününüz yok</p>
+      <p className="fav-empty-title">You don't have a favorite product yet.</p>
       <p className="fav-empty-sub">
-        Beğendiğiniz ürünleri favorilere ekleyerek buradan takip edebilirsiniz.
+        You can add your favorite products to your favorites list and keep track
+        of them here.
       </p>
       <button
         className="fav-empty-btn"
         onClick={() => (window.location.href = "/dashboard")}
       >
-        Ürünleri Keşfet
+        Discover Products
       </button>
     </div>
   );
@@ -262,7 +267,7 @@ function FavoritesPage() {
         const json = await res.json();
 
         if (!res.ok || !json.success) {
-          throw new Error(json.message || "Favoriler alınamadı.");
+          throw new Error(json.message || "Favorites could not be retrieved.");
         }
 
         setFavorites(json.data || []);
@@ -271,7 +276,7 @@ function FavoritesPage() {
           totalItems: json.totalItems || 0,
         });
       } catch (err) {
-        setError(err.message || "Bir hata oluştu.");
+        setError(err.message || "An error occured.");
       } finally {
         setLoading(false);
       }
@@ -305,11 +310,11 @@ function FavoritesPage() {
             </>
           ) : (
             <>
-              <p className="fav-hero-eyebrow">Hesabım</p>
-              <h1 className="fav-hero-title">Favorilerim</h1>
+              <p className="fav-hero-eyebrow">My account</p>
+              <h1 className="fav-hero-title">My favorites</h1>
               {!error && (
                 <p className="fav-hero-sub">
-                  {pagination.totalItems} ürün kaydedildi
+                  {pagination.totalItems} product saved
                 </p>
               )}
             </>
@@ -320,9 +325,7 @@ function FavoritesPage() {
         {error && (
           <div className="fav-error">
             <p>{error}</p>
-            <button onClick={() => window.location.reload()}>
-              Tekrar Dene
-            </button>
+            <button onClick={() => window.location.reload()}>Try again</button>
           </div>
         )}
 

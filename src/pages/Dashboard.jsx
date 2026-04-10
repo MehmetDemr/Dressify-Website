@@ -76,7 +76,7 @@ function Pagination({
         </button>
       </div>
       <p className="dash-pg-info">
-        {start}–{end} / {totalItems} ürün
+        {start}–{end} / {totalItems} product
       </p>
     </div>
   );
@@ -88,7 +88,7 @@ function ProductCard({ product, categories, brands }) {
   const [isLiking, setIsLiking] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const brandName = product.category?.brand?.brandName || "Dressify";
-  const categoryName = product.category?.categoryName || "Kategori";
+  const categoryName = product.category?.categoryName || "Category";
 
   useEffect(() => {
     setLiked(!!product.isFavourite);
@@ -97,7 +97,7 @@ function ProductCard({ product, categories, brands }) {
 
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
-  const productTitle = product.productName || product.name || "İsimsiz Ürün";
+  const productTitle = product.productName || product.name || "Unnamed Product";
   const isNew = product.createdAt
     ? Date.now() - new Date(product.createdAt).getTime() <
       1000 * 60 * 60 * 24 * 7
@@ -124,7 +124,7 @@ function ProductCard({ product, categories, brands }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Favorilere eklemek için giriş yapmalısınız.");
+      alert("You must log in to add to favorites.");
       return;
     }
 
@@ -178,10 +178,10 @@ function ProductCard({ product, categories, brands }) {
         setLiked(data.isFavourite ?? !liked);
         setFavouriteId(data.isFavourite ? data.favouriteId || null : null);
       } else {
-        console.error("Favori işlemi başarısız:", data.message);
+        console.error("Favorite operation failed:", data.message);
       }
     } catch (error) {
-      console.error("İstek hatası:", error);
+      console.error("Request error:", error);
     } finally {
       setIsLiking(false);
     }
@@ -193,7 +193,7 @@ function ProductCard({ product, categories, brands }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Sepete eklemek için giriş yapmalısınız.");
+      alert("You must log in to add to your cart.");
       return;
     }
 
@@ -215,14 +215,14 @@ function ProductCard({ product, categories, brands }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        alert("Ürün sepete eklendi.");
+        alert("Product added to cart.");
       } else {
-        console.error("Sepete ekleme başarısız:", data.message);
-        alert(data.message || "Ürün sepete eklenemedi.");
+        console.error("Add to card failed:", data.message);
+        alert(data.message || "The product could not be added to the cart.");
       }
     } catch (error) {
-      console.error("Sepete ekleme hatası:", error);
-      alert("Bir hata oluştu.");
+      console.error("Add to cart error:", error);
+      alert("An error occured.");
     } finally {
       setIsAddingToCart(false);
     }
@@ -243,14 +243,14 @@ function ProductCard({ product, categories, brands }) {
           </div>
         )}
 
-        {isNew && <span className="product-badge">Yeni</span>}
+        {isNew && <span className="product-badge">New</span>}
 
         <button
           type="button"
           className={`product-like ${liked ? "liked" : ""}`}
           onClick={handleLike}
           disabled={isLiking}
-          aria-label="Favoriye ekle"
+          aria-label="Add to favourites"
           style={{
             color: liked ? "#ff4d4f" : "inherit",
             cursor: isLiking ? "not-allowed" : "pointer",
@@ -268,14 +268,15 @@ function ProductCard({ product, categories, brands }) {
           </svg>
         </button>
 
+        {/* Desktop add card button */}
         <button
           type="button"
-          className="product-add-cart"
+          className="product-add-cart product-add-cart--desktop"
           onClick={handleAddToCart}
           disabled={isAddingToCart}
           style={{ cursor: isAddingToCart ? "not-allowed" : "pointer" }}
         >
-          {isAddingToCart ? "Ekleniyor..." : "Sepete Ekle"}
+          {isAddingToCart ? "Adding Card..." : "Add Card"}
         </button>
       </div>
 
@@ -292,6 +293,17 @@ function ProductCard({ product, categories, brands }) {
           </span>
         </div>
 
+        {/* Mobile add card button */}
+        <button
+          type="button"
+          className="product-add-cart product-add-cart--mobile"
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          style={{ cursor: isAddingToCart ? "not-allowed" : "pointer" }}
+        >
+          {isAddingToCart ? "Adding Card..." : "Add Card"}
+        </button>
+
         <button
           type="button"
           className="product-detail-btn product-detail-btn--static"
@@ -301,7 +313,7 @@ function ProductCard({ product, categories, brands }) {
           }}
           disabled={!detailUrl}
         >
-          Detay
+          Details
         </button>
       </div>
     </div>
@@ -336,7 +348,7 @@ function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("Tümü");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
     totalPages: 1,
@@ -384,15 +396,19 @@ function Dashboard() {
         ]);
 
         if (!productRes.ok || !productJson.success) {
-          throw new Error(productJson.message || "Ürünler alınamadı.");
+          throw new Error(
+            productJson.message || "Products could not be fetched.",
+          );
         }
 
         if (!brandRes.ok || !brandJson.success) {
-          throw new Error(brandJson.message || "Markalar alınamadı.");
+          throw new Error(brandJson.message || "Brands could not be fetched.");
         }
 
         if (!categoryRes.ok || !categoryJson.success) {
-          throw new Error(categoryJson.message || "Kategoriler alınamadı.");
+          throw new Error(
+            categoryJson.message || "Categories could not be fetched.",
+          );
         }
 
         setProducts(productJson.data || []);
@@ -403,7 +419,7 @@ function Dashboard() {
         setBrands(brandJson.data || []);
         setCategories(categoryJson.data || []);
       } catch (err) {
-        setError(err.message || "Bir hata oluştu.");
+        setError(err.message || "An error occurred.");
       } finally {
         setLoading(false);
       }
@@ -417,10 +433,10 @@ function Dashboard() {
     setPage(1);
   };
 
-  const filters = ["Tümü", "Yeni"];
+  const filters = ["All", "New"];
 
   const filteredProducts =
-    activeFilter === "Tümü"
+    activeFilter === "All"
       ? products
       : products.filter((product) => {
           if (!product.createdAt) return false;
@@ -437,8 +453,8 @@ function Dashboard() {
       <main className="dash-main">
         <div className="dash-hero">
           <div className="dash-hero-text">
-            <p className="dash-hero-eyebrow">Yeni Sezon — 2026</p>
-            <h1 className="dash-hero-title">En Yeni Ürünler</h1>
+            <p className="dash-hero-eyebrow">New Season — 2026</p>
+            <h1 className="dash-hero-title">New Products</h1>
           </div>
 
           {!loading && !error && (
@@ -458,10 +474,8 @@ function Dashboard() {
 
         {error && (
           <div className="dash-error">
-            <p>Ürünler yüklenemedi: {error}</p>
-            <button onClick={() => window.location.reload()}>
-              Tekrar Dene
-            </button>
+            <p>Products could not be loaded : {error}</p>
+            <button onClick={() => window.location.reload()}>Try Again</button>
           </div>
         )}
 
@@ -485,7 +499,7 @@ function Dashboard() {
                 />
               ))
             ) : (
-              <p className="dash-empty">Gösterilecek ürün bulunamadı.</p>
+              <p className="dash-empty">Products not found...</p>
             )}
           </div>
         )}

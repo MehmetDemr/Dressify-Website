@@ -12,6 +12,7 @@ import ProductDetailsPage from "./pages/ProductDetails";
 import ScrollToTop from "./components/ScrollTop/ScrollTop";
 import NotFound from "./pages/NotFound";
 import UserActivityPage from "./pages/UserActivity";
+import GoogleCallback from "./pages/GoogleCallback";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
 
         <Route path="/dashboard/events" element={<UserActivityPage />} />
 
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

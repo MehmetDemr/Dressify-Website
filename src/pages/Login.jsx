@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/dressify-logo.png";
 import { API_BASE_URL } from "../../config";
 import "../styles/Auth.css";
+import { LoadSpinner } from "../components/Spinner/spinner.component";
+import { showToast } from "../utils/toastrService";
 import LandingPageHeader from "../components/Landing-Page/landing-page-header/Header";
 import LandingPageFooter from "../components/Landing-Page/landing-page-footer/Footer";
 
@@ -10,15 +12,23 @@ function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
+      if (!email && !email.includes("@")) {
+        showToast("Email is invalid", "warning");
+      }
+
+      if (!password) {
+        showToast("Password cannot be empty", "warning");
+      }
+
       const response = await fetch(`${API_BASE_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,6 +38,7 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
+        showToast("Login failed", "error");
         throw new Error(data.message || "Login failed.");
       }
 
@@ -35,26 +46,37 @@ function Login() {
       const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
       localStorage.setItem("token", token);
 
+      showToast(
+        "Login successful! You are being redirected...",
+        "success",
+        1500,
+      );
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Giriş başarısız. Bilgilerinizi kontrol edin.");
+      showToast(
+        err.message || "Login failed. Please check your information.",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
+    setGoogleLoading(true);
     window.location.href = `${API_BASE_URL}/user/google`;
   };
 
   const handleAppleLogin = () => {
+    setAppleLoading(true);
     window.location.href = `${API_BASE_URL}/user/apple`;
   };
 
   return (
     <>
-      <LandingPageHeader></LandingPageHeader>
+      {loading && <LoadSpinner />}
 
+      <LandingPageHeader />
       <div className="auth-page">
         <div className="auth-overlay" />
 
@@ -84,16 +106,17 @@ function Login() {
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleGoogleLogin}
+                disabled={googleLoading || appleLoading}
               >
-                Continue with Google
+                {googleLoading ? "Redirecting..." : "Continue with Google"}
               </button>
-
               <button
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleAppleLogin}
+                disabled={appleLoading || googleLoading}
               >
-                Continue with Apple
+                {appleLoading ? "Redirecting..." : "Continue with Apple"}
               </button>
             </div>
 
@@ -126,16 +149,12 @@ function Login() {
                 />
               </div>
 
-              {error && (
-                <p className="auth-message auth-message--error">{error}</p>
-              )}
-
               <div className="auth-row">
                 <label className="auth-check">
                   <input type="checkbox" />
                   <span>Remember me</span>
                 </label>
-                <a href="#forgot" className="auth-link">
+                <a href="/forgot-password" className="auth-link">
                   Forgot password?
                 </a>
               </div>
@@ -158,7 +177,7 @@ function Login() {
           </div>
         </div>
       </div>
-      <LandingPageFooter></LandingPageFooter>
+      <LandingPageFooter />
     </>
   );
 }

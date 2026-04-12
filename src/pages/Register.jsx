@@ -5,6 +5,8 @@ import { API_BASE_URL } from "../../config";
 import "../styles/Auth.css";
 import LandingPageHeader from "../components/Landing-Page/landing-page-header/Header";
 import LandingPageFooter from "../components/Landing-Page/landing-page-footer/Footer";
+import { LoadSpinner } from "../components/Spinner/spinner.component";
+import { showToast } from "../utils/toastrService";
 
 function Register() {
   const navigate = useNavigate();
@@ -20,12 +22,11 @@ function Register() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -37,53 +38,25 @@ function Register() {
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/;
 
-    if (!formData.userName.trim()) {
-      return "Username is required.";
-    }
-
-    if (formData.userName.length < 3) {
+    if (!formData.userName.trim()) return "Username is required.";
+    if (formData.userName.length < 3)
       return "Username must be at least 3 characters.";
-    }
-
-    if (formData.userName.length > 25) {
+    if (formData.userName.length > 25)
       return "Username must be at most 25 characters.";
-    }
-
-    if (!usernameRegex.test(formData.userName)) {
+    if (!usernameRegex.test(formData.userName))
       return "Username can only contain letters, numbers and underscore.";
-    }
-
-    if (!formData.email.trim()) {
-      return "Email address is required.";
-    }
-
-    if (!formData.password) {
-      return "Password is required.";
-    }
-
-    if (formData.password.length < 8) {
+    if (!formData.email.trim()) return "Email address is required.";
+    if (!formData.password) return "Password is required.";
+    if (formData.password.length < 8)
       return "Password must be at least 8 characters.";
-    }
-
-    if (!passwordRegex.test(formData.password)) {
+    if (!passwordRegex.test(formData.password))
       return "Password must contain at least 1 uppercase, 1 lowercase and 1 special character.";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword)
       return "Passwords do not match.";
-    }
-
-    if (!formData.phone.trim()) {
-      return "Phone number is required.";
-    }
-
-    if (!formData.gender) {
-      return "Please select a gender.";
-    }
-
-    if (!formData.agreeTerms) {
+    if (!formData.phone.trim()) return "Phone number is required.";
+    if (!formData.gender) return "Please select a gender.";
+    if (!formData.agreeTerms)
       return "You must agree to the Terms & Conditions.";
-    }
 
     return "";
   };
@@ -91,12 +64,9 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
-    setSuccess("");
-
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      showToast(validationError, "warning");
       return;
     }
 
@@ -105,14 +75,12 @@ function Register() {
 
       const response = await fetch(`${API_BASE_URL}/user/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userName: formData.userName,
           email: formData.email,
           password: formData.password,
-          phone: formData.phone,
+          phone: `+90${formData.phone}`,
           gender: formData.gender,
         }),
       });
@@ -120,10 +88,15 @@ function Register() {
       const data = await response.json();
 
       if (!response.ok) {
+        showToast("Registration failed.", "error");
         throw new Error(data.message || "Registration failed.");
       }
 
-      setSuccess("Account created successfully.");
+      showToast(
+        "Account created successfully! Redirecting...",
+        "success",
+        1500,
+      );
 
       setFormData({
         userName: "",
@@ -135,27 +108,48 @@ function Register() {
         agreeTerms: false,
       });
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 1200);
+      navigate("/login");
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      showToast(err.message || "Something went wrong.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
+    setGoogleLoading(true);
     window.location.href = `${API_BASE_URL}/user/google`;
   };
 
   const handleAppleLogin = () => {
+    setAppleLoading(true);
     window.location.href = `${API_BASE_URL}/user/apple`;
   };
 
+  function handlePhoneChange(e) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+    if (digits.startsWith("0")) return;
+    setFormData((prev) => ({ ...prev, phone: digits }));
+  }
+
+  function formatPhoneDisplay(digits) {
+    if (!digits) return "";
+    return [
+      digits.slice(0, 3),
+      digits.slice(3, 6),
+      digits.slice(6, 8),
+      digits.slice(8, 10),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
   return (
     <>
-    <LandingPageHeader></LandingPageHeader>
+      {loading && <LoadSpinner />}
+
+      <LandingPageHeader />
       <div className="auth-page">
         <div className="auth-overlay" />
 
@@ -186,16 +180,17 @@ function Register() {
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleGoogleLogin}
+                disabled={googleLoading || appleLoading}
               >
-                Continue with Google
+                {googleLoading ? "Redirecting..." : "Continue with Google"}
               </button>
-
               <button
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleAppleLogin}
+                disabled={appleLoading || googleLoading}
               >
-                Continue with Apple
+                {appleLoading ? "Redirecting..." : "Continue with Apple"}
               </button>
             </div>
 
@@ -230,14 +225,20 @@ function Register() {
 
               <div className="auth-field">
                 <label htmlFor="phone">Phone Number</label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="text"
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
+                <div className="fp-phone-wrapper">
+                  <span className="fp-phone-prefix">+90</span>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="5__ ___ __ __"
+                    value={formatPhoneDisplay(formData.phone)}
+                    onChange={handlePhoneChange}
+                    className="fp-phone-input"
+                    maxLength={13}
+                  />
+                </div>
               </div>
 
               <div className="auth-field">
@@ -290,14 +291,6 @@ function Register() {
                 <span>I agree to the Terms & Conditions</span>
               </label>
 
-              {error && (
-                <p className="auth-message auth-message--error">{error}</p>
-              )}
-
-              {success && (
-                <p className="auth-message auth-message--success">{success}</p>
-              )}
-
               <button
                 type="submit"
                 className="auth-btn auth-btn--primary"
@@ -316,7 +309,7 @@ function Register() {
           </div>
         </div>
       </div>
-      <LandingPageFooter></LandingPageFooter>
+      <LandingPageFooter />
     </>
   );
 }

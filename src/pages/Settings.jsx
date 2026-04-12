@@ -1,24 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
 import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
+import { LoadSpinner } from "../components/Spinner/spinner.component";
+import { showToast } from "../utils/toastrService";
+import { API_BASE_URL } from "../../config";
 import "../styles/Settings.css";
 
-/* Toggle Switch  */
-function Toggle({ checked, onChange }) {
+const getToken = () => localStorage.getItem("token");
+const authFetch = (url, options = {}) =>
+  fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...(options.headers || {}),
+    },
+  });
+
+/*  Toggle  */
+function Toggle({ checked, onChange, disabled }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
-      className={`stg-toggle ${checked ? "on" : ""}`}
-      onClick={() => onChange(!checked)}
+      className={`stg-toggle ${checked ? "on" : ""} ${disabled ? "disabled" : ""}`}
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
     >
       <span className="stg-toggle-thumb" />
     </button>
   );
 }
 
-/* Section Wrapper  */
+/*  Section  */
 function Section({ title, description, children }) {
   return (
     <div className="stg-section">
@@ -31,7 +46,7 @@ function Section({ title, description, children }) {
   );
 }
 
-/* Row  */
+/*  Row  */
 function Row({ label, sublabel, children }) {
   return (
     <div className="stg-row">
@@ -44,8 +59,16 @@ function Row({ label, sublabel, children }) {
   );
 }
 
-/* Saved Card  */
-function SavedCard({ last4, brand, expiry, onRemove }) {
+/*  Saved Card  */
+function SavedCard({
+  id,
+  cardName,
+  cardNumber,
+  cardExpireDate,
+  cardCVV,
+  onRemove,
+  removing,
+}) {
   return (
     <div className="stg-card">
       <div className="stg-card-left">
@@ -63,20 +86,179 @@ function SavedCard({ last4, brand, expiry, onRemove }) {
           </svg>
         </div>
         <div>
-          <p className="stg-card-brand">{brand}</p>
-          <p className="stg-card-number">•••• •••• •••• {last4}</p>
-          <p className="stg-card-expiry">Expiry: {expiry}</p>
+          <p className="stg-card-brand">{cardName}</p>
+          <p className="stg-card-number">
+            •••• •••• •••• {cardNumber?.slice(-4)}
+          </p>
+          <p className="stg-card-expiry">Expiry: {cardExpireDate}</p>
         </div>
       </div>
-      <button className="stg-card-remove" onClick={onRemove} type="button">
-        Remove
+      <button
+        className="stg-card-remove"
+        onClick={onRemove}
+        disabled={removing}
+        type="button"
+      >
+        {removing ? "..." : "Remove"}
       </button>
     </div>
   );
 }
 
-/* Address Card  */
-function AddressCard({ title, address, onRemove }) {
+/*  Add Card Modal  */
+function AddCardModal({ onClose, onSuccess }) {
+  const [form, setForm] = useState({
+    cardName: "",
+    cardNumber: "",
+    cardExpireDate: "",
+    cardCVV: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function formatCardNumber(val) {
+    return val
+      .replace(/\D/g, "")
+      .slice(0, 16)
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+  }
+  function formatExpiry(val) {
+    const digits = val.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+  }
+
+  async function handleSubmit() {
+    const rawNumber = form.cardNumber.replace(/\s/g, "");
+    if (!form.cardName.trim()) return setError("Cardholder name is required.");
+    if (rawNumber.length !== 16)
+      return setError("Card number must be 16 digits.");
+    if (form.cardExpireDate.length !== 5)
+      return setError("Enter a valid expiry (MM/YY).");
+    if (form.cardCVV.length < 3)
+      return setError("CVV must be at least 3 digits.");
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await authFetch(`${API_BASE_URL}/payment`, {
+        method: "POST",
+        body: JSON.stringify({
+          cardName: form.cardName,
+          cardNumber: rawNumber,
+          cardExpireDate: form.cardExpireDate,
+          cardCVV: form.cardCVV,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      onSuccess(data.data ?? data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      {loading && <LoadSpinner />}
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>
+          ✕
+        </button>
+        <p className="modal-eyebrow">Add New Card</p>
+        {error && <p className="modal-error">{error}</p>}
+        <div className="modal-body">
+          <div className="form-group">
+            <label>Cardholder Name</label>
+            <input
+              type="text"
+              placeholder="John Doe"
+              value={form.cardName}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, cardName: e.target.value }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Card Number</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="0000 0000 0000 0000"
+              value={form.cardNumber}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  cardNumber: formatCardNumber(e.target.value),
+                }))
+              }
+            />
+          </div>
+          <div className="form-row" style={{ gap: "12px" }}>
+            <div className="form-group">
+              <label>Expiry</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="MM/YY"
+                value={form.cardExpireDate}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    cardExpireDate: formatExpiry(e.target.value),
+                  }))
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label>CVV</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="•••"
+                maxLength={4}
+                value={form.cardCVV}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    cardCVV: e.target.value.replace(/\D/g, "").slice(0, 4),
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <button
+            className="save-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            Add Card
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*  Address Card  */
+function AddressCard({
+  id,
+  addressName,
+  province,
+  district,
+  neighbour,
+  apartment,
+  floor,
+  flat,
+  onRemove,
+  onEdit,
+  removing,
+}) {
+  const fullAddress = `${neighbour}, ${apartment} Apt. Floor ${floor} Flat ${flat}, ${district} / ${province}`;
+
   return (
     <div className="stg-card">
       <div className="stg-card-left">
@@ -94,20 +276,196 @@ function AddressCard({ title, address, onRemove }) {
           </svg>
         </div>
         <div>
-          <p className="stg-card-brand">{title}</p>
+          <p className="stg-card-brand">{addressName}</p>
           <p className="stg-card-expiry" style={{ maxWidth: 260 }}>
-            {address}
+            {fullAddress}
           </p>
         </div>
       </div>
-      <button className="stg-card-remove" onClick={onRemove} type="button">
-        Remove
-      </button>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button className="stg-card-edit" onClick={onEdit} type="button">
+          Edit
+        </button>
+        <button
+          className="stg-card-remove"
+          onClick={onRemove}
+          disabled={removing}
+          type="button"
+        >
+          {removing ? "..." : "Remove"}
+        </button>
+      </div>
     </div>
   );
 }
 
-/* Nav items  */
+/*  Add Address Modal  */
+function AddAddressModal({ onClose, onSuccess }) {
+  const [form, setForm] = useState({
+    addressName: "",
+    province: "",
+    district: "",
+    neighbour: "",
+    apartment: "",
+    floor: "",
+    flat: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    const empty = Object.entries(form).find(([, v]) => !v.trim());
+    if (empty) return setError(`${empty[0]} is required.`);
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await authFetch(`${API_BASE_URL}/address`, {
+        method: "POST",
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      onSuccess(data.data ?? data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function field(key, label, placeholder) {
+    return (
+      <div className="form-group">
+        <label>{label}</label>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={form[key]}
+          onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      {loading && <LoadSpinner />}
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>
+          ✕
+        </button>
+        <p className="modal-eyebrow">Add New Address</p>
+        {error && <p className="modal-error">{error}</p>}
+        <div className="modal-body">
+          {field("addressName", "Address Title", "e.g. Home, Work")}
+          <div className="form-row" style={{ gap: "12px" }}>
+            {field("province", "Province", "e.g. Istanbul")}
+            {field("district", "District", "e.g. Kadikoy")}
+          </div>
+          {field("neighbour", "Neighbourhood", "e.g. Moda Mah.")}
+          <div className="form-row" style={{ gap: "12px" }}>
+            {field("apartment", "Apartment", "Apartment name/no")}
+            {field("floor", "Floor", "e.g. 3")}
+            {field("flat", "Flat No", "e.g. 12")}
+          </div>
+          <button
+            className="save-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            Add Address
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*  Edit Address Modal  */
+function EditAddressModal({ address, onClose, onSuccess }) {
+  const [form, setForm] = useState({
+    addressName: address.addressName ?? "",
+    province: address.province ?? "",
+    district: address.district ?? "",
+    neighbour: address.neighbour ?? "",
+    apartment: address.apartment ?? "",
+    floor: address.floor ?? "",
+    flat: address.flat ?? "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    const empty = Object.entries(form).find(([, v]) => !v.trim());
+    if (empty) return setError(`${empty[0]} is required.`);
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await authFetch(`${API_BASE_URL}/address/${address.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      onSuccess({ ...address, ...form });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function field(key, label, placeholder) {
+    return (
+      <div className="form-group">
+        <label>{label}</label>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={form[key]}
+          onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      {loading && <LoadSpinner />}
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>
+          ✕
+        </button>
+        <p className="modal-eyebrow">Edit Address</p>
+        {error && <p className="modal-error">{error}</p>}
+        <div className="modal-body">
+          {field("addressName", "Address Title", "e.g. Home, Work")}
+          <div className="form-row" style={{ gap: "12px" }}>
+            {field("province", "Province", "e.g. Istanbul")}
+            {field("district", "District", "e.g. Kadikoy")}
+          </div>
+          {field("neighbour", "Neighbourhood", "e.g. Moda Mah.")}
+          <div className="form-row" style={{ gap: "12px" }}>
+            {field("apartment", "Apartment", "Apartment name/no")}
+            {field("floor", "Floor", "e.g. 3")}
+            {field("flat", "Flat No", "e.g. 12")}
+          </div>
+          <button
+            className="save-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*  Nav items  */
 const NAV_ITEMS = [
   {
     id: "notifications",
@@ -176,123 +534,200 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-  {
-    id: "appearance",
-    label: "Appearance",
-    icon: (
-      <svg
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        <circle cx="12" cy="12" r="5" />
-        <line x1="12" y1="1" x2="12" y2="3" />
-        <line x1="12" y1="21" x2="12" y2="23" />
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      </svg>
-    ),
-  },
-  {
-    id: "account",
-    label: "Account",
-    icon: (
-      <svg
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
 ];
 
-/* Main  */
+/*  Main  */
 function SettingsPage() {
   const [activeSection, setActiveSection] = useState("notifications");
+  const [globalLoading, setGlobalLoading] = useState(false);
 
-  /* Notf */
-  const [notif, setNotif] = useState({
-    emailDiscount: true,
-    emailOrder: true,
-    emailNewProduct: false,
-    smsDiscount: false,
-    smsOrder: true,
-    pushAll: true,
-    pushFavorite: true,
-  });
+  /* Permission state */
+  const [permission, setPermission] = useState(null);
+  const [permLoading, setPermLoading] = useState(false);
 
-  /* Payment */
-  const [cards, setCards] = useState([
-    { id: 1, last4: "4242", brand: "Visa", expiry: "08/27" },
-    { id: 2, last4: "1234", brand: "Mastercard", expiry: "03/26" },
-  ]);
+  /* Payment state */
+  const [cards, setCards] = useState([]);
+  const [cardsLoading, setCardsLoading] = useState(false);
+  const [removingCard, setRemovingCard] = useState(null);
+  const [showAddCard, setShowAddCard] = useState(false);
 
-  /* Adress */
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      title: "Home",
-      address: "Bornova Mah. Ataturk Cad. No:12 D:3, Bornova / Izmir",
+  /* Address state */
+  const [addresses, setAddresses] = useState([]);
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [removingAddress, setRemovingAddress] = useState(null);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+
+  /*  Fetch permission  */
+  useEffect(() => {
+    async function fetchPermission() {
+      setPermLoading(true);
+      try {
+        const res = await authFetch(`${API_BASE_URL}/permission`);
+        const data = await res.json();
+        if (data.success) setPermission(data.data ?? data.permission ?? data);
+      } catch (e) {
+        showToast("Failed to load permission settings.", "error", 2000);
+      } finally {
+        setPermLoading(false);
+      }
+    }
+    fetchPermission();
+  }, []);
+
+  /*  Fetch payments  */
+  useEffect(() => {
+    if (activeSection !== "payment") return;
+    async function fetchCards() {
+      setCardsLoading(true);
+      try {
+        const res = await authFetch(`${API_BASE_URL}/payment`);
+        const data = await res.json();
+        if (data.success) setCards(data.data ?? []);
+      } catch {
+        showToast("Failed to load payment methods.", "error", 2000);
+      } finally {
+        setCardsLoading(false);
+      }
+    }
+    fetchCards();
+  }, [activeSection]);
+
+  /*  Fetch addresses  */
+  useEffect(() => {
+    if (activeSection !== "addresses") return;
+    async function fetchAddresses() {
+      setAddressesLoading(true);
+      try {
+        const res = await authFetch(`${API_BASE_URL}/address`);
+        const data = await res.json();
+        if (data.success) setAddresses(data.data ?? []);
+      } catch {
+        showToast("Failed to load addresses.", "error", 2000);
+      } finally {
+        setAddressesLoading(false);
+      }
+    }
+    fetchAddresses();
+  }, [activeSection]);
+
+  /*  Toggle permission & immediately PATCH  */
+  const handlePermissionToggle = useCallback(
+    async (key) => {
+      if (!permission) return;
+      const newVal = !permission[key];
+      const optimistic = { ...permission, [key]: newVal };
+      setPermission(optimistic);
+
+      try {
+        const res = await authFetch(`${API_BASE_URL}/permission`, {
+          method: "PATCH",
+          body: JSON.stringify({ [key]: newVal }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast("Settings updated.", "success", 1500);
+      } catch (e) {
+        // Rollback
+        setPermission((prev) => ({ ...prev, [key]: !newVal }));
+        showToast(e.message || "Failed to update settings.", "error", 2000);
+      }
     },
-    {
-      id: 2,
-      title: "Work",
-      address: "Alsancak Mah. Kibris Sehitleri Cad. No:48, Konak / Izmir",
-    },
-  ]);
+    [permission],
+  );
 
-  /* Privacy */
-  const [privacy, setPrivacy] = useState({
-    twoFactor: false,
-    loginAlert: true,
-    dataSharing: false,
-    activityVisible: true,
-  });
-
-  /* Appearance */
-  const [appearance, setAppearance] = useState({
-    language: "en",
-    currency: "USD",
-    compactView: false,
-  });
-
-  /* Account */
-  const [account, setAccount] = useState({
-    currentPassword: "",
-    newPassword: "",
-    newPasswordConfirm: "",
-  });
-
-  function toggleNotif(key) {
-    setNotif((p) => ({ ...p, [key]: !p[key] }));
+  /*  Remove card  */
+  async function handleRemoveCard(id) {
+    setRemovingCard(id);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/payment/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message);
+      }
+      setCards((prev) => prev.filter((c) => c.id !== id));
+      showToast("Card removed.", "success", 1500);
+    } catch (e) {
+      showToast(e.message || "Failed to remove card.", "error", 2000);
+    } finally {
+      setRemovingCard(null);
+    }
   }
 
-  function togglePrivacy(key) {
-    setPrivacy((p) => ({ ...p, [key]: !p[key] }));
+  /*  Remove address  */
+  async function handleRemoveAddress(id) {
+    setRemovingAddress(id);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/address/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message);
+      }
+      setAddresses((prev) => prev.filter((a) => a.id !== id));
+      showToast("Address removed.", "success", 1500);
+    } catch (e) {
+      showToast(e.message || "Failed to remove address.", "error", 2000);
+    } finally {
+      setRemovingAddress(null);
+    }
   }
+
+  const isLoading =
+    globalLoading || permLoading || cardsLoading || addressesLoading;
 
   return (
     <div className="stg-layout">
+      {isLoading && <LoadSpinner />}
+
+      {showAddCard && (
+        <AddCardModal
+          onClose={() => setShowAddCard(false)}
+          onSuccess={(card) => {
+            setCards((prev) => [...prev, card]);
+            setShowAddCard(false);
+            showToast("Card added successfully.", "success", 2000);
+          }}
+        />
+      )}
+
+      {showAddAddress && (
+        <AddAddressModal
+          onClose={() => setShowAddAddress(false)}
+          onSuccess={(addr) => {
+            setAddresses((prev) => [...prev, addr]);
+            setShowAddAddress(false);
+            showToast("Address added successfully.", "success", 2000);
+          }}
+        />
+      )}
+
+      {editingAddress && (
+        <EditAddressModal
+          address={editingAddress}
+          onClose={() => setEditingAddress(null)}
+          onSuccess={(updated) => {
+            setAddresses((prev) =>
+              prev.map((a) => (a.id === updated.id ? updated : a)),
+            );
+            setEditingAddress(null);
+            showToast("Address updated successfully.", "success", 2000);
+          }}
+        />
+      )}
+
       <DashboardHeader />
 
       <main className="stg-main">
-        {/* Page Hero  */}
         <div className="stg-hero">
           <p className="stg-hero-eyebrow">My Account</p>
           <h1 className="stg-hero-title">Settings</h1>
         </div>
 
         <div className="stg-body">
-          {/* Sidebar  */}
           <aside className="stg-sidebar">
             <nav className="stg-nav">
               {NAV_ITEMS.map((item) => (
@@ -309,7 +744,6 @@ function SettingsPage() {
             </nav>
           </aside>
 
-          {/* Content  */}
           <div className="stg-content">
             {/* NOTIFICATIONS */}
             {activeSection === "notifications" && (
@@ -323,18 +757,23 @@ function SettingsPage() {
                     sublabel="New collections from your favorite brands"
                   >
                     <Toggle
-                      checked={notif.emailNewProduct}
-                      onChange={() => toggleNotif("emailNewProduct")}
+                      checked={permission?.emailNotifyForNewProduct ?? false}
+                      onChange={() =>
+                        handlePermissionToggle("emailNotifyForNewProduct")
+                      }
+                      disabled={permLoading}
                     />
                   </Row>
-
                   <Row
                     label="Discounts and Campaigns"
                     sublabel="Instant promotional messages"
                   >
                     <Toggle
-                      checked={notif.emailDiscount}
-                      onChange={() => toggleNotif("emailDiscount")}
+                      checked={permission?.emailNotifyForDiscount ?? false}
+                      onChange={() =>
+                        handlePermissionToggle("emailNotifyForDiscount")
+                      }
+                      disabled={permLoading}
                     />
                   </Row>
                 </Section>
@@ -344,46 +783,27 @@ function SettingsPage() {
                   description="Notifications that will be sent to your phone number."
                 >
                   <Row
+                    label="New Products"
+                    sublabel="New collections from your favorite brands"
+                  >
+                    <Toggle
+                      checked={permission?.smsNotifyForNewProduct ?? false}
+                      onChange={() =>
+                        handlePermissionToggle("smsNotifyForNewProduct")
+                      }
+                      disabled={permLoading}
+                    />
+                  </Row>
+                  <Row
                     label="Discounts and Campaigns"
                     sublabel="Instant promotional messages"
                   >
                     <Toggle
-                      checked={notif.smsDiscount}
-                      onChange={() => toggleNotif("smsDiscount")}
-                    />
-                  </Row>
-
-                  <Row
-                    label="Order Status"
-                    sublabel="Updates about your shipping and delivery"
-                  >
-                    <Toggle
-                      checked={notif.smsOrder}
-                      onChange={() => toggleNotif("smsOrder")}
-                    />
-                  </Row>
-                </Section>
-
-                <Section
-                  title="App Notifications"
-                  description="Browser and mobile push notifications."
-                >
-                  <Row
-                    label="All Notifications"
-                    sublabel="General application notifications"
-                  >
-                    <Toggle
-                      checked={notif.pushAll}
-                      onChange={() => toggleNotif("pushAll")}
-                    />
-                  </Row>
-                  <Row
-                    label="Favorite Product Price Drop"
-                    sublabel="When items in your wishlist go on sale"
-                  >
-                    <Toggle
-                      checked={notif.pushFavorite}
-                      onChange={() => toggleNotif("pushFavorite")}
+                      checked={permission?.smsNotifyForDiscount ?? false}
+                      onChange={() =>
+                        handlePermissionToggle("smsNotifyForDiscount")
+                      }
+                      disabled={permLoading}
                     />
                   </Row>
                 </Section>
@@ -392,41 +812,43 @@ function SettingsPage() {
 
             {/* PAYMENT */}
             {activeSection === "payment" && (
-              <>
-                <Section
-                  title="Saved Cards"
-                  description="Manage your cards for faster checkout."
+              <Section
+                title="Saved Cards"
+                description="Manage your cards for faster checkout."
+              >
+                <div className="stg-card-list">
+                  {cardsLoading && <p className="stg-empty-note">Loading...</p>}
+                  {!cardsLoading && cards.length === 0 && (
+                    <p className="stg-empty-note">No saved cards found.</p>
+                  )}
+                  {cards.map((card) => (
+                    <SavedCard
+                      key={card.id}
+                      {...card}
+                      removing={removingCard === card.id}
+                      onRemove={() => handleRemoveCard(card.id)}
+                    />
+                  ))}
+                </div>
+                <button
+                  className="stg-add-btn"
+                  type="button"
+                  onClick={() => setShowAddCard(true)}
                 >
-                  <div className="stg-card-list">
-                    {cards.length === 0 && (
-                      <p className="stg-empty-note">No saved cards found.</p>
-                    )}
-                    {cards.map((card) => (
-                      <SavedCard
-                        key={card.id}
-                        {...card}
-                        onRemove={() =>
-                          setCards((p) => p.filter((c) => c.id !== card.id))
-                        }
-                      />
-                    ))}
-                  </div>
-                  <button className="stg-add-btn" type="button">
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add New Card
-                  </button>
-                </Section>
-              </>
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add New Card
+                </button>
+              </Section>
             )}
 
             {/* ADDRESSES */}
@@ -436,20 +858,27 @@ function SettingsPage() {
                 description="Add and manage your delivery addresses."
               >
                 <div className="stg-card-list">
-                  {addresses.length === 0 && (
+                  {addressesLoading && (
+                    <p className="stg-empty-note">Loading...</p>
+                  )}
+                  {!addressesLoading && addresses.length === 0 && (
                     <p className="stg-empty-note">No saved addresses found.</p>
                   )}
                   {addresses.map((addr) => (
                     <AddressCard
                       key={addr.id}
                       {...addr}
-                      onRemove={() =>
-                        setAddresses((p) => p.filter((a) => a.id !== addr.id))
-                      }
+                      removing={removingAddress === addr.id}
+                      onRemove={() => handleRemoveAddress(addr.id)}
+                      onEdit={() => setEditingAddress(addr)}
                     />
                   ))}
                 </div>
-                <button className="stg-add-btn" type="button">
+                <button
+                  className="stg-add-btn"
+                  type="button"
+                  onClick={() => setShowAddAddress(true)}
+                >
                   <svg
                     width="13"
                     height="13"
@@ -466,173 +895,43 @@ function SettingsPage() {
               </Section>
             )}
 
-            {/* PRIVACY */}
+            {/* PRIVACY & SECURITY */}
             {activeSection === "privacy" && (
-              <>
-                <Section
-                  title="Security"
-                  description="Enhance your account security."
+              <Section
+                title="Security"
+                description="Enhance your account security."
+              >
+                <Row
+                  label="SMS Two-Factor Authentication"
+                  sublabel="Verification code via SMS when logging in"
                 >
-                  <Row
-                    label="Two-Factor Authentication"
-                    sublabel="Verification code via SMS when logging in"
-                  >
-                    <Toggle
-                      checked={privacy.twoFactor}
-                      onChange={() => togglePrivacy("twoFactor")}
-                    />
-                  </Row>
-
-                  <Row
-                    label="Login Alerts"
-                    sublabel="Receive an email when a new login is detected"
-                  >
-                    <Toggle
-                      checked={privacy.loginAlert}
-                      onChange={() => togglePrivacy("loginAlert")}
-                    />
-                  </Row>
-                </Section>
-
-                <Section title="Danger Zone">
-                  <div className="stg-danger-zone">
-                    <div>
-                      <p className="stg-danger-label">Delete Account</p>
-                      <p className="stg-danger-sub">
-                        All your data will be permanently deleted; this action
-                        cannot be undone.
-                      </p>
-                    </div>
-                    <button className="stg-danger-btn" type="button">
-                      Delete Account
-                    </button>
-                  </div>
-                </Section>
-              </>
-            )}
-
-            {/* APPEARANCE */}
-            {activeSection === "appearance" && (
-              <>
-                <Section
-                  title="Language & Currency"
-                  description="Select your preferred language and currency."
+                  <Toggle
+                    checked={permission?.smsTwoFA ?? false}
+                    onChange={() => handlePermissionToggle("smsTwoFA")}
+                    disabled={permLoading}
+                  />
+                </Row>
+                <Row
+                  label="Email Two-Factor Authentication"
+                  sublabel="Verification code via email when logging in"
                 >
-                  <Row label="Language" sublabel="Choose interface language">
-                    <select
-                      className="stg-select"
-                      value={appearance.language}
-                      onChange={(e) =>
-                        setAppearance((p) => ({
-                          ...p,
-                          language: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="tr">Turkish</option>
-                      <option value="en">English</option>
-                      <option value="de">German</option>
-                    </select>
-                  </Row>
-                  <Row
-                    label="Currency"
-                    sublabel="Currency for displaying prices"
-                  >
-                    <select
-                      className="stg-select"
-                      value={appearance.currency}
-                      onChange={(e) =>
-                        setAppearance((p) => ({
-                          ...p,
-                          currency: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="TRY">₺ Lira</option>
-                      <option value="USD">$ Dollar</option>
-                      <option value="EUR">€ Euro</option>
-                    </select>
-                  </Row>
-                </Section>
-
-                <Section
-                  title="Viewing Preferences"
-                  description="Customize the product list view."
+                  <Toggle
+                    checked={permission?.emailToFA ?? false}
+                    onChange={() => handlePermissionToggle("emailToFA")}
+                    disabled={permLoading}
+                  />
+                </Row>
+                <Row
+                  label="New Login Alerts"
+                  sublabel="Receive an email when a new login is detected"
                 >
-                  <Row
-                    label="Compact View"
-                    sublabel="Show smaller product cards"
-                  >
-                    <Toggle
-                      checked={appearance.compactView}
-                      onChange={(v) =>
-                        setAppearance((p) => ({ ...p, compactView: v }))
-                      }
-                    />
-                  </Row>
-                </Section>
-              </>
-            )}
-
-            {/* ACCOUNT */}
-            {activeSection === "account" && (
-              <>
-                <Section
-                  title="Change Password"
-                  description="Regularly update your password for your security."
-                >
-                  <div className="stg-form">
-                    <div className="stg-field">
-                      <label className="stg-label">Current Password</label>
-                      <input
-                        type="password"
-                        className="stg-input"
-                        placeholder="••••••••"
-                        value={account.currentPassword}
-                        onChange={(e) =>
-                          setAccount((p) => ({
-                            ...p,
-                            currentPassword: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="stg-field">
-                      <label className="stg-label">New Password</label>
-                      <input
-                        type="password"
-                        className="stg-input"
-                        placeholder="••••••••"
-                        value={account.newPassword}
-                        onChange={(e) =>
-                          setAccount((p) => ({
-                            ...p,
-                            newPassword: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="stg-field">
-                      <label className="stg-label">Confirm New Password</label>
-                      <input
-                        type="password"
-                        className="stg-input"
-                        placeholder="••••••••"
-                        value={account.newPasswordConfirm}
-                        onChange={(e) =>
-                          setAccount((p) => ({
-                            ...p,
-                            newPasswordConfirm: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <button className="stg-save-btn" type="button">
-                      Update Password
-                    </button>
-                  </div>
-                </Section>
-              </>
+                  <Toggle
+                    checked={permission?.newLoginWarning ?? false}
+                    onChange={() => handlePermissionToggle("newLoginWarning")}
+                    disabled={permLoading}
+                  />
+                </Row>
+              </Section>
             )}
           </div>
         </div>

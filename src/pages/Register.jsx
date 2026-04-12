@@ -22,6 +22,8 @@ function Register() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -93,7 +95,7 @@ function Register() {
       showToast(
         "Account created successfully! Redirecting...",
         "success",
-        2000,
+        1500,
       );
 
       setFormData({
@@ -106,7 +108,7 @@ function Register() {
         agreeTerms: false,
       });
 
-      setTimeout(() => navigate("/login"), 1500);
+      navigate("/login");
     } catch (err) {
       showToast(err.message || "Something went wrong.", "error");
     } finally {
@@ -115,10 +117,12 @@ function Register() {
   };
 
   const handleGoogleLogin = () => {
+    setGoogleLoading(true);
     window.location.href = `${API_BASE_URL}/user/google`;
   };
 
   const handleAppleLogin = () => {
+    setAppleLoading(true);
     window.location.href = `${API_BASE_URL}/user/apple`;
   };
 
@@ -157,15 +161,17 @@ function Register() {
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleGoogleLogin}
+                disabled={googleLoading || appleLoading}
               >
-                Continue with Google
+                {googleLoading ? "Redirecting..." : "Continue with Google"}
               </button>
               <button
                 type="button"
                 className="auth-btn auth-btn--social"
                 onClick={handleAppleLogin}
+                disabled={appleLoading || googleLoading}
               >
-                Continue with Apple
+                {appleLoading ? "Redirecting..." : "Continue with Apple"}
               </button>
             </div>
 

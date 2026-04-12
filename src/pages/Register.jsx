@@ -5,6 +5,8 @@ import { API_BASE_URL } from "../../config";
 import "../styles/Auth.css";
 import LandingPageHeader from "../components/Landing-Page/landing-page-header/Header";
 import LandingPageFooter from "../components/Landing-Page/landing-page-footer/Footer";
+import { LoadSpinner } from "../components/Spinner/spinner.component";
+import { showToast } from "../utils/toastrService";
 
 function Register() {
   const navigate = useNavigate();
@@ -20,12 +22,9 @@ function Register() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -37,53 +36,25 @@ function Register() {
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/;
 
-    if (!formData.userName.trim()) {
-      return "Username is required.";
-    }
-
-    if (formData.userName.length < 3) {
+    if (!formData.userName.trim()) return "Username is required.";
+    if (formData.userName.length < 3)
       return "Username must be at least 3 characters.";
-    }
-
-    if (formData.userName.length > 25) {
+    if (formData.userName.length > 25)
       return "Username must be at most 25 characters.";
-    }
-
-    if (!usernameRegex.test(formData.userName)) {
+    if (!usernameRegex.test(formData.userName))
       return "Username can only contain letters, numbers and underscore.";
-    }
-
-    if (!formData.email.trim()) {
-      return "Email address is required.";
-    }
-
-    if (!formData.password) {
-      return "Password is required.";
-    }
-
-    if (formData.password.length < 8) {
+    if (!formData.email.trim()) return "Email address is required.";
+    if (!formData.password) return "Password is required.";
+    if (formData.password.length < 8)
       return "Password must be at least 8 characters.";
-    }
-
-    if (!passwordRegex.test(formData.password)) {
+    if (!passwordRegex.test(formData.password))
       return "Password must contain at least 1 uppercase, 1 lowercase and 1 special character.";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword)
       return "Passwords do not match.";
-    }
-
-    if (!formData.phone.trim()) {
-      return "Phone number is required.";
-    }
-
-    if (!formData.gender) {
-      return "Please select a gender.";
-    }
-
-    if (!formData.agreeTerms) {
+    if (!formData.phone.trim()) return "Phone number is required.";
+    if (!formData.gender) return "Please select a gender.";
+    if (!formData.agreeTerms)
       return "You must agree to the Terms & Conditions.";
-    }
 
     return "";
   };
@@ -91,12 +62,9 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
-    setSuccess("");
-
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      showToast(validationError, "warning");
       return;
     }
 
@@ -105,9 +73,7 @@ function Register() {
 
       const response = await fetch(`${API_BASE_URL}/user/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userName: formData.userName,
           email: formData.email,
@@ -120,10 +86,15 @@ function Register() {
       const data = await response.json();
 
       if (!response.ok) {
+        showToast("Registration failed.", "error");
         throw new Error(data.message || "Registration failed.");
       }
 
-      setSuccess("Account created successfully.");
+      showToast(
+        "Account created successfully! Redirecting...",
+        "success",
+        2000,
+      );
 
       setFormData({
         userName: "",
@@ -135,11 +106,9 @@ function Register() {
         agreeTerms: false,
       });
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 1200);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      showToast(err.message || "Something went wrong.", "error");
     } finally {
       setLoading(false);
     }
@@ -155,7 +124,9 @@ function Register() {
 
   return (
     <>
-    <LandingPageHeader></LandingPageHeader>
+      {loading && <LoadSpinner />}
+
+      <LandingPageHeader />
       <div className="auth-page">
         <div className="auth-overlay" />
 
@@ -189,7 +160,6 @@ function Register() {
               >
                 Continue with Google
               </button>
-
               <button
                 type="button"
                 className="auth-btn auth-btn--social"
@@ -290,14 +260,6 @@ function Register() {
                 <span>I agree to the Terms & Conditions</span>
               </label>
 
-              {error && (
-                <p className="auth-message auth-message--error">{error}</p>
-              )}
-
-              {success && (
-                <p className="auth-message auth-message--success">{success}</p>
-              )}
-
               <button
                 type="submit"
                 className="auth-btn auth-btn--primary"
@@ -316,7 +278,7 @@ function Register() {
           </div>
         </div>
       </div>
-      <LandingPageFooter></LandingPageFooter>
+      <LandingPageFooter />
     </>
   );
 }

@@ -483,6 +483,7 @@
     .auth-shell {
     width: 100%;
     max-width: 100%;
+    padding-top:65px;
   }
 
   .auth-field input,

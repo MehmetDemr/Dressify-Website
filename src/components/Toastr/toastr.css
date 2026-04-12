@@ -1,0 +1,128 @@
+.toastr-container {
+  position: fixed;
+  top: 74px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toastr-item {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  min-width: 280px;
+  max-width: 360px;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  animation: toastr-slide-in 0.3s ease forwards;
+}
+
+@keyframes toastr-slide-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.toastr-success {
+  background: #f0faf4;
+  border-color: #c3e6d0;
+  color: #1e6b3f;
+}
+.toastr-error {
+  background: #fff5f5;
+  border-color: #f5c6c6;
+  color: #9b2c2c;
+}
+.toastr-warning {
+  background: #fffbf0;
+  border-color: #f5e0a0;
+  color: #7a5c1e;
+}
+.toastr-info {
+  background: #f0f6ff;
+  border-color: #bdd6f5;
+  color: #1a4a8a;
+}
+
+/* Icon */
+.toastr-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.toastr-success .toastr-icon { background: rgba(95, 186, 125, 0.15); color: #2d8a55; }
+.toastr-error   .toastr-icon { background: rgba(200, 80, 80, 0.12);  color: #c05050; }
+.toastr-warning .toastr-icon { background: rgba(201, 169, 110, 0.2); color: #a07830; }
+.toastr-info    .toastr-icon { background: rgba(56, 139, 220, 0.15); color: #2266bb; }
+
+/* Message */
+.toastr-message {
+  flex: 1;
+  font-family: var(--font-body, sans-serif);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Close */
+.toastr-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  transition: opacity 0.2s ease;
+  color: inherit;
+}
+.toastr-close:hover { opacity: 0.9; }
+
+/* Progress bar */
+.toastr-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  animation: toastr-progress linear forwards;
+  transform-origin: left;
+}
+
+.toastr-success .toastr-progress { background: #2d8a55; }
+.toastr-error   .toastr-progress { background: #c05050; }
+.toastr-warning .toastr-progress { background: #a07830; }
+.toastr-info    .toastr-progress { background: #2266bb; }
+
+@keyframes toastr-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@media (max-width: 768px) {
+  .toastr-container {
+    bottom: 16px;
+    right: 14px;
+    left: 14px;
+  }
+  .toastr-item {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+}

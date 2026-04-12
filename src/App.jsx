@@ -14,11 +14,13 @@ import NotFound from "./pages/NotFound";
 import UserActivityPage from "./pages/UserActivity";
 import GoogleCallback from "./pages/GoogleCallback";
 import AppleCallback from "./pages/AppleCallback";
+import Toastr from "./components/Toastr/toastr.component";
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <Toastr />
       <Routes>
         {/* Landing */}
         <Route path="/" element={<HomePage />} />

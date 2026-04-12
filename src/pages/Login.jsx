@@ -154,7 +154,7 @@ function Login() {
                   <input type="checkbox" />
                   <span>Remember me</span>
                 </label>
-                <a href="/dashboard/forgot-password" className="auth-link">
+                <a href="/forgot-password" className="auth-link">
                   Forgot password?
                 </a>
               </div>

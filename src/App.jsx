@@ -12,6 +12,7 @@ import ProductDetailsPage from "./pages/ProductDetails";
 import ScrollToTop from "./components/ScrollTop/ScrollTop";
 import NotFound from "./pages/NotFound";
 import UserActivityPage from "./pages/UserActivity";
+import ForgotPassword from "./pages/ForgotPassword";
 import GoogleCallback from "./pages/GoogleCallback";
 import AppleCallback from "./pages/AppleCallback";
 import Toastr from "./components/Toastr/toastr.component";
@@ -47,6 +48,8 @@ function App() {
         />
 
         <Route path="/dashboard/events" element={<UserActivityPage />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/auth/apple/callback" element={<AppleCallback />} />

@@ -80,7 +80,7 @@ function Register() {
           userName: formData.userName,
           email: formData.email,
           password: formData.password,
-          phone: formData.phone,
+          phone: `+90${formData.phone}`,
           gender: formData.gender,
         }),
       });
@@ -125,6 +125,25 @@ function Register() {
     setAppleLoading(true);
     window.location.href = `${API_BASE_URL}/user/apple`;
   };
+
+  function handlePhoneChange(e) {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+    if (digits.startsWith("0")) return;
+    setFormData((prev) => ({ ...prev, phone: digits }));
+  }
+
+  function formatPhoneDisplay(digits) {
+    if (!digits) return "";
+    return [
+      digits.slice(0, 3),
+      digits.slice(3, 6),
+      digits.slice(6, 8),
+      digits.slice(8, 10),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
 
   return (
     <>
@@ -206,14 +225,20 @@ function Register() {
 
               <div className="auth-field">
                 <label htmlFor="phone">Phone Number</label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="text"
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
+                <div className="fp-phone-wrapper">
+                  <span className="fp-phone-prefix">+90</span>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="5__ ___ __ __"
+                    value={formatPhoneDisplay(formData.phone)}
+                    onChange={handlePhoneChange}
+                    className="fp-phone-input"
+                    maxLength={13}
+                  />
+                </div>
               </div>
 
               <div className="auth-field">

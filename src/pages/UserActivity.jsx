@@ -67,12 +67,12 @@ const TYPE_META = {
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "shopping", label: "Shopping" },
-  { key: "click", label: "Clicks" },
   { key: "addingFavourite", label: "Favourites" },
 ];
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
+  if (isNaN(date)) return "—";
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -122,9 +122,9 @@ function ActivityRow({ activity }) {
         {meta.icon}
       </div>
       <div className="ua-act-info">
-        <div className="ua-act-name">{activity.product_id || "Product"}</div>
+        <div className="ua-act-name">{activity.product_name || "Product"}</div>
         <div className="ua-act-meta">
-          {activity.brand_id} · {activity.category_id}
+          {activity.brand_name} · {activity.category_name}
         </div>
       </div>
       <span className={meta.badgeCls}>{meta.label}</span>
@@ -161,12 +161,13 @@ function UserActivityPage() {
     async function fetchActivities() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/user/activity`, {
+        const res = await fetch(`${API_BASE_URL}/userActivity`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
         if (json.success) {
-          setActivities(Array.isArray(json.data) ? json.data : [json.data]);
+          const raw = json.data;
+          setActivities(Array.isArray(raw) ? raw : raw ? [raw] : []);
         }
       } catch (err) {
         console.error("Failed to fetch activity data:", err);
@@ -193,7 +194,8 @@ function UserActivityPage() {
 
   // Brand bar chart data
   const brandCounts = activities.reduce((acc, a) => {
-    acc[a.brand_id] = (acc[a.brand_id] || 0) + 1;
+    const key = a.brand_name || "Bilinmiyor";
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   const brandSorted = Object.entries(brandCounts)
@@ -203,7 +205,8 @@ function UserActivityPage() {
 
   // Category bar chart data
   const catCounts = activities.reduce((acc, a) => {
-    acc[a.category_id] = (acc[a.category_id] || 0) + 1;
+    const key = a.category_name || a.category_id;
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   const catSorted = Object.entries(catCounts)
@@ -218,8 +221,8 @@ function UserActivityPage() {
       <main className="ua-page">
         <div className="ua-content">
           {/* Page title */}
-          <p className="ua-page-label">My Account</p>
-          <h1 className="ua-page-heading">Activity History</h1>
+          <p className="fav-hero-eyebrow">My Account</p>
+          <h1 className="fav-hero-title">Activity History</h1>
 
           {/* Metric cards */}
           <div className="ua-metrics">
@@ -227,29 +230,16 @@ function UserActivityPage() {
               label="Total Activity"
               value={counts.total}
               sub="All time"
-              badge="+12%"
-              badgeType="up"
             />
             <MetricCard
               label="Shopping"
               value={counts.shopping}
               sub="Products purchased"
-              badge="+8%"
-              badgeType="up"
             />
             <MetricCard
               label="Favourited"
               value={counts.addingFavourite}
               sub="Added to list"
-              badge="+24%"
-              badgeType="up"
-            />
-            <MetricCard
-              label="Clicks"
-              value={counts.click}
-              sub="Product views"
-              badge="-3%"
-              badgeType="down"
             />
           </div>
 

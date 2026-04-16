@@ -311,7 +311,7 @@ function FavoritesPage() {
           ) : (
             <>
               <p className="fav-hero-eyebrow">My account</p>
-              <h1 className="fav-hero-title">My favorites</h1>
+              <h1 className="fav-hero-title">My favourites</h1>
               {!error && (
                 <p className="fav-hero-sub">
                   {pagination.totalItems} product saved

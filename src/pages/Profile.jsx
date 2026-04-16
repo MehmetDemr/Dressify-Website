@@ -842,8 +842,6 @@ function ProfilePage() {
 
       <main className="profile-page">
         <div className="profile-wrap">
-          <p className="profile-section-title">Account Settings</p>
-
           <div className="profile-grid">
             {/* Sidebar */}
             <aside className="profile-sidebar">

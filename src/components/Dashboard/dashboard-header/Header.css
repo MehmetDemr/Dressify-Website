@@ -247,7 +247,6 @@
   text-overflow: ellipsis;
 }
 
-/* Kullanıcı tipi badge */
 .dash-modal-badge {
   display: inline-flex;
   align-items: center;
@@ -261,6 +260,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(201, 169, 110, 0.8);
+  justify-content: center;
 }
 
 /*  Status row  */

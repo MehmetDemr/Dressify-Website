@@ -373,7 +373,7 @@
   letter-spacing: 0.02em;
 }
 
-/* ── Modal Overlay ── */
+/*  Modal Overlay  */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -449,7 +449,7 @@
   color: #c84b4b;
 }
 
-/* ── Modal Stepper ── */
+/*  Modal Stepper  */
 .modal-stepper {
   display: flex;
   align-items: flex-start;
@@ -520,7 +520,7 @@
   color: var(--dark);
 }
 
-/* ── Modal Body ── */
+/*  Modal Body  */
 .modal-body {
   display: flex;
   flex-direction: column;
@@ -557,7 +557,7 @@
   margin-top: 0;
 }
 
-/* ── Form error ── */
+/*  Form error  */
 .form-error {
   font-family: var(--font-body);
   font-size: 12px;
@@ -565,7 +565,7 @@
   margin: 4px 0 0;
 }
 
-/* ── Ghost button ── */
+/*  Ghost button  */
 .save-btn--ghost {
   background: transparent !important;
   color: var(--text-gray) !important;
@@ -574,6 +574,14 @@
 .save-btn--ghost:hover {
   border-color: var(--dark) !important;
   color: var(--dark) !important;
+}
+.profile-head {
+  width: calc(100% + 4rem);
+  margin-left: -2rem;
+}
+
+.profile-section-title {
+  margin-bottom: 1.75rem;
 }
 
 /*  Responsive  */

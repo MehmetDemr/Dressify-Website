@@ -16,8 +16,14 @@
 
 /*  Hero  */
 .fav-hero {
-  padding-bottom: 32px;
-  border-bottom: 1px solid var(--border);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-bottom: 24px;
+  display: flex;
+}
+.fav-hero-eyebrow {
+  margin: 0;
 }
 
 .fav-hero-eyebrow {
@@ -27,7 +33,7 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold);
-  margin: 0 0 10px;
+  margin: 0 0 0px;
 }
 
 .fav-hero-title {
@@ -36,7 +42,7 @@
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--dark);
-  margin: 0 0 8px;
+  margin: 0px;
   line-height: 1.1;
 }
 
@@ -379,7 +385,7 @@
     display: flex;
     flex-direction: column;
     padding-bottom: 32px;
-    padding-top:55px;
+    padding-top: 0px;
     border-bottom: 1px solid var(--border);
   }
 

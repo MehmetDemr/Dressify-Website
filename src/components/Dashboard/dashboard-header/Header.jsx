@@ -277,7 +277,7 @@ function DashboardHeader() {
                       className={`dash-status-dot ${user.active ? "active" : "inactive"}`}
                     />
                     <span className="dash-status-label">
-                      {user.active ? "Aktif" : "Pasif"}
+                      {user.active ? "Active" : "Passive"}
                     </span>
                   </div>
                   {user.lastLogin && (
@@ -323,7 +323,7 @@ function DashboardHeader() {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
-                  Profilim
+                  Profile
                 </Link>
                 <Link
                   to="/dashboard/favourite"
@@ -340,7 +340,7 @@ function DashboardHeader() {
                   >
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
-                  Favorilerim
+                  My Favourites
                 </Link>
                 <Link
                   to="/dashboard/settings"
@@ -358,7 +358,7 @@ function DashboardHeader() {
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
-                  Ayarlar
+                  Settings
                 </Link>
               </nav>
               <div className="dash-modal-divider" />
@@ -376,7 +376,7 @@ function DashboardHeader() {
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                Çıkış Yap
+                Exit
               </button>
             </div>
           )}
@@ -403,7 +403,7 @@ function DashboardHeader() {
           className="dash-mobile-link"
           onClick={() => setMobileNavOpen(false)}
         >
-          Ana Sayfa
+          Main Page
         </Link>
 
         {/* Markalar accordion */}
@@ -414,7 +414,7 @@ function DashboardHeader() {
               setMobileExpanded((v) => (v === "brands" ? null : "brands"))
             }
           >
-            Markalar
+            Brands
             <svg
               className={`dash-nav-chevron ${mobileExpanded === "brands" ? "open" : ""}`}
               width="12"
@@ -448,7 +448,7 @@ function DashboardHeader() {
           className="dash-mobile-link"
           onClick={() => setMobileNavOpen(false)}
         >
-          Etkinliklerim
+          My Activities
         </Link>
       </div>
     </header>

@@ -5,6 +5,33 @@ import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
 import "../styles/Brand.css";
 
+function getProductCategoryId(product) {
+  if (!product) return null;
+  return (
+    product.category_id ||
+    product.categoryId ||
+    product.category?.id ||
+    product.Category?.id ||
+    null
+  );
+}
+
+function getCategoryBrandId(category) {
+  if (!category) return null;
+  return (
+    category.brand_id ||
+    category.brandId ||
+    category.brand?.id ||
+    category.Brand?.id ||
+    null
+  );
+}
+
+function getLastSlugPart(slug) {
+  if (!slug) return "";
+  return String(slug).split("/").filter(Boolean).pop();
+}
+
 function BrandProductCard({ product, brand, categories }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
@@ -85,17 +112,17 @@ function BrandProductCard({ product, brand, categories }) {
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
   const productTitle = product.productName || product.name || "Unnamed Product";
-
+  const productCategoryId = getProductCategoryId(product);
   const matchedCategory = categories.find(
-    (c) => String(c.id) === String(product.category_id),
+    (c) => String(c.id) === String(productCategoryId),
   );
   const categoryName = matchedCategory?.categoryName || "Category";
-
+  const categorySlugForUrl = getLastSlugPart(matchedCategory?.categorySlug);
+  const productSlugForUrl = getLastSlugPart(product.productSlug);
   const detailUrl =
-    brand?.brandSlug && matchedCategory?.categorySlug && product.productSlug
-      ? `/dashboard/${brand.brandSlug}/${matchedCategory.categorySlug}/${product.productSlug}`
+    brand?.brandSlug && categorySlugForUrl && productSlugForUrl
+      ? `/dashboard/${brand.brandSlug}/${categorySlugForUrl}/${productSlugForUrl}`
       : null;
-
   const isNew = product.createdAt
     ? Date.now() - new Date(product.createdAt).getTime() <
       1000 * 60 * 60 * 24 * 7
@@ -138,7 +165,7 @@ function BrandProductCard({ product, brand, categories }) {
         </button>
 
         <button type="button" className="bp-add-cart bp-add-cart--desktop">
-          Add to Card
+          Add to Cart
         </button>
       </div>
 
@@ -156,7 +183,7 @@ function BrandProductCard({ product, brand, categories }) {
         </div>
 
         <button type="button" className="bp-add-cart bp-add-cart--mobile">
-          Add to Card
+          Add to Cart
         </button>
 
         <button
@@ -174,7 +201,6 @@ function BrandProductCard({ product, brand, categories }) {
   );
 }
 
-/*  Skeleton  */
 function BrandCardSkeleton() {
   return (
     <div className="bp-card bp-card--skeleton">
@@ -197,7 +223,6 @@ function BrandCardSkeleton() {
   );
 }
 
-/*  Main Page  */
 function BrandPage() {
   const { brandSlug } = useParams();
 
@@ -207,6 +232,16 @@ function BrandPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [page, setPage] = useState(1);
+  const LIMIT = 32;
+  const [totalPages, setTotalPages] = useState(1);
+
+  const filteredProducts =
+    activeCategory === "all"
+      ? products
+      : products.filter(
+          (p) => String(getProductCategoryId(p)) === String(activeCategory),
+        );
 
   useEffect(() => {
     async function fetchData() {
@@ -215,15 +250,18 @@ function BrandPage() {
         setError(null);
 
         const token = localStorage.getItem("token");
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        };
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers.Authorization = `Bearer ${token}`;
 
         const [brandRes, categoryRes, productRes] = await Promise.all([
           fetch(`${API_BASE_URL}/brand`, { headers }),
           fetch(`${API_BASE_URL}/category`, { headers }),
-          fetch(`${API_BASE_URL}/product`, { headers }),
+          fetch(
+            `${API_BASE_URL}/product?brandSlug=${brandSlug}&limit=${LIMIT}&page=${page}`,
+            {
+              headers,
+            },
+          ),
         ]);
 
         const [brandJson, categoryJson, productJson] = await Promise.all([
@@ -233,32 +271,51 @@ function BrandPage() {
         ]);
 
         if (!brandJson.success)
-          throw new Error(brandJson.message || "The brands could not be acquired.");
+          throw new Error(
+            brandJson.message || "The brands could not be acquired.",
+          );
         if (!categoryJson.success)
           throw new Error(
             categoryJson.message || "The categories could not be acquired.",
           );
         if (!productJson.success)
-          throw new Error(productJson.message || "The products could not be received.");
+          throw new Error(
+            productJson.message || "The products could not be received.",
+          );
 
-        const foundBrand = (brandJson.data || []).find(
-          (b) => b.brandSlug === brandSlug,
+        setTotalPages(productJson.totalPages);
+
+
+
+        const allBrands = brandJson.data || [];
+        const allCategories = categoryJson.data || [];
+        const allProducts = productJson.data || [];
+
+        const foundBrand = allBrands.find(
+          (b) => String(b.brandSlug) === String(brandSlug),
         );
         if (!foundBrand) throw new Error("Brand not found.");
+
         setBrand(foundBrand);
 
-        const brandCategories = (categoryJson.data || []).filter(
-          (c) => String(c.brand_id) === String(foundBrand.id),
+        const brandCategories = allCategories.filter(
+          (category) =>
+            String(getCategoryBrandId(category)) === String(foundBrand.id),
         );
         setCategories(brandCategories);
 
-        const brandCategoryIds = new Set(brandCategories.map((c) => c.id));
-        const brandProducts = (productJson.data || []).filter((p) =>
-          brandCategoryIds.has(p.category_id),
+        const brandCategoryIds = new Set(
+          brandCategories.map((category) => String(category.id)),
         );
+
+        const brandProducts = allProducts.filter((product) =>
+          brandCategoryIds.has(String(getProductCategoryId(product))),
+        );
+
         setProducts(brandProducts);
       } catch (err) {
-        setError(err.message || "An error occured.");
+        console.error("Brand page error:", err);
+        setError(err.message || "An error occurred.");
       } finally {
         setLoading(false);
       }
@@ -267,31 +324,30 @@ function BrandPage() {
     fetchData();
   }, [brandSlug]);
 
-  const filteredProducts =
-    activeCategory === "all"
-      ? products
-      : products.filter(
-          (p) => String(p.category_id) === String(activeCategory),
-        );
-
   return (
     <div className="bp-layout">
       <DashboardHeader />
 
       <main className="bp-main">
-        {/*  Brand Hero  */}
         <div className="bp-hero">
           {loading ? (
             <div className="skeleton-line" style={{ width: 180, height: 36 }} />
           ) : error ? null : (
             <>
-              <p className="bp-hero-eyebrow">Brand  Collection</p>
+              <p className="bp-hero-eyebrow">Brand Collection</p>
               <h1 className="bp-hero-title">{brand?.brandName}</h1>
               <p className="bp-hero-sub">
                 {filteredProducts.length} product
                 {activeCategory !== "all" &&
-                categories.find((c) => c.id === activeCategory)
-                  ? ` — ${categories.find((c) => c.id === activeCategory).categoryName}`
+                categories.find(
+                  (category) => String(category.id) === String(activeCategory),
+                )
+                  ? ` — ${
+                      categories.find(
+                        (category) =>
+                          String(category.id) === String(activeCategory),
+                      ).categoryName
+                    }`
                   : ""}
               </p>
             </>
@@ -299,7 +355,6 @@ function BrandPage() {
         </div>
 
         <div className="bp-body">
-          {/*  Sidebar Filters  */}
           <aside className="bp-sidebar">
             <p className="bp-sidebar-title">Category</p>
             <ul className="bp-filter-list">
@@ -312,14 +367,21 @@ function BrandPage() {
                   <span className="bp-filter-count">{products.length}</span>
                 </button>
               </li>
+
               {categories.map((cat) => {
                 const count = products.filter(
-                  (p) => String(p.category_id) === String(cat.id),
+                  (product) =>
+                    String(getProductCategoryId(product)) === String(cat.id),
                 ).length;
+
                 return (
                   <li key={cat.id}>
                     <button
-                      className={`bp-filter-item ${activeCategory === cat.id ? "active" : ""}`}
+                      className={`bp-filter-item ${
+                        String(activeCategory) === String(cat.id)
+                          ? "active"
+                          : ""
+                      }`}
                       onClick={() => setActiveCategory(cat.id)}
                     >
                       <span>{cat.categoryName}</span>
@@ -331,7 +393,6 @@ function BrandPage() {
             </ul>
           </aside>
 
-          {/*  Product Grid  */}
           <section className="bp-grid-wrap">
             {error && (
               <div className="bp-error">
@@ -344,8 +405,8 @@ function BrandPage() {
 
             {loading && (
               <div className="bp-grid">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <BrandCardSkeleton key={i} />
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <BrandCardSkeleton key={index} />
                 ))}
               </div>
             )}
@@ -364,7 +425,7 @@ function BrandPage() {
                 ) : (
                   <p className="bp-empty">
                     No products were found in this category.
-                </p>
+                  </p>
                 )}
               </div>
             )}

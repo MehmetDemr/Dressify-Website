@@ -417,6 +417,73 @@
   display: block;
 }
 
+/*Pagination it will be constant*/
+
+.dash-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.dash-pg-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-pg-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--dark);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.dash-pg-btn:hover:not(:disabled) {
+  border-color: var(--dark);
+}
+
+.dash-pg-btn.active {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: var(--white);
+}
+
+.dash-pg-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dash-pg-arrow {
+  font-size: 18px;
+}
+
+.dash-pg-dots {
+  color: var(--text-gray);
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.dash-pg-info {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-gray);
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .bp-main {
     padding: 24px 14px 40px;
@@ -541,5 +608,30 @@
 
   .bp-hero {
     padding-top: 55px;
+  }
+
+  /*Pagination it will be constant*/
+
+  .dash-pagination {
+    gap: 10px;
+    padding-top: 12px;
+    margin-top: 18px;
+  }
+
+  .dash-pg-controls {
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dash-pg-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .dash-pg-info {
+    font-size: 10px;
+    text-align: center;
   }
 }

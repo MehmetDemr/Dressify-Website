@@ -40,7 +40,7 @@ async function fetchBrands() {
   const json = await res.json();
   if (!res.ok || !json.success)
     throw new Error(json.message || "Brands could not be fetched.");
-  return json;
+  return json.data || [];
 }
 
 async function fetchCategories() {
@@ -53,7 +53,7 @@ async function fetchCategories() {
   const json = await res.json();
   if (!res.ok || !json.success)
     throw new Error(json.message || "Categories could not be fetched.");
-  return json;
+  return json.data || [];
 }
 
 //Pagination
@@ -425,8 +425,8 @@ function Dashboard() {
   };
 
   const products = productData?.data || [];
-  const brands = brandData?.data || [];
-  const categories = categoryData?.data || [];
+  const brands = brandData || [];
+  const categories = categoryData || [];
   const pagination = {
     totalPages: productData?.totalPages || 1,
     totalItems: productData?.totalItems || 0,

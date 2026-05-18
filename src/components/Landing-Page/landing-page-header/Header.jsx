@@ -36,9 +36,9 @@ function LandingPageHeader() {
         <a href="#featured" onClick={(e) => handleNavClick(e, "#featured")}>
           Featured
         </a>
-        <a href="#contact" onClick={(e) => handleNavClick(e, "#contact")}>
+        <Link to="/contact" onClick={() => setMenuOpen(false)}>
           Contact
-        </a>
+        </Link>
 
         <div className="auth-actions auth-actions--mobile">
           <Link

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./Footer.css";
 
 function LandingPageFooter() {
@@ -8,45 +9,64 @@ function LandingPageFooter() {
         <div className="footer-brand">
           <h2 className="footer-brand-name">DRESSIFY</h2>
           <p className="footer-brand-tagline">
-            Curated fashion for those who believe style is a form of
-            self-expression.
+            Discover curated fashion from popular brands. Sign in to explore
+            products, save favourites, and build your personal style list.
           </p>
         </div>
 
-        {/* Collection */}
+        {/* Explore */}
         <div className="footer-col">
-          <p className="footer-col-title">Collection</p>
+          <p className="footer-col-title">Explore</p>
           <ul>
             <li>
-              <a href="#new">New Arrivals</a>
+              <a href="/#featured">Curated Brands</a>
             </li>
             <li>
-              <a href="#women">Women</a>
+              <a href="/#about">About Dressify</a>
             </li>
             <li>
-              <a href="#men">Men</a>
+              <a href="/#faq">FAQ</a>
             </li>
             <li>
-              <a href="#accessories">Accessories</a>
+              <Link to="/register">Start Shopping</Link>
             </li>
           </ul>
         </div>
 
-        {/* Company */}
+        {/* Brands */}
         <div className="footer-col">
-          <p className="footer-col-title">Company</p>
+          <p className="footer-col-title">Brands</p>
           <ul>
             <li>
-              <a href="#about">About Us</a>
+              <a href="/#featured">Nike</a>
             </li>
             <li>
-              <a href="#careers">Careers</a>
+              <a href="/#featured">Adidas</a>
             </li>
             <li>
-              <a href="#press">Press</a>
+              <a href="/#featured">Zara</a>
             </li>
             <li>
-              <a href="#sustainability">Sustainability</a>
+              <a href="/#featured">View All Brands</a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Account */}
+        <div className="footer-col">
+          <p className="footer-col-title">Account</p>
+          <ul>
+            <li>
+              <Link to="/login">Sign In</Link>
+            </li>
+            <li>
+              <Link to="/register">Create Account</Link>
+            </li>
+            <li>
+              <Link to="/login">View Products</Link>
+            </li>
+            <li>
+              <Link to="/login">My Favourites</Link>
             </li>
           </ul>
         </div>
@@ -56,16 +76,22 @@ function LandingPageFooter() {
           <p className="footer-col-title">Support</p>
           <ul>
             <li>
-              <a href="#faq">FAQ</a>
+              <a href="/#faq">Help Center</a>
             </li>
             <li>
-              <a href="#shipping">Shipping</a>
+              <a href="/#faq">Shipping Info</a>
             </li>
             <li>
-              <a href="#returns">Returns</a>
+              <a href="/#faq">Returns</a>
             </li>
             <li>
-              <a href="#contact">Contact</a>
+              <Link to="/contact">Contact</Link>
+            </li>
+            <li>
+              <Link to="/terms">Terms</Link>
+            </li>
+            <li>
+              <Link to="/privacy-policy">Privacy Policy</Link>
             </li>
           </ul>
         </div>
@@ -73,6 +99,7 @@ function LandingPageFooter() {
 
       <div className="footer-bottom">
         <p className="footer-copy">© 2026 Dressify. All rights reserved.</p>
+
         <div className="footer-socials">
           <a href="#instagram">Instagram</a>
           <a href="#pinterest">Pinterest</a>

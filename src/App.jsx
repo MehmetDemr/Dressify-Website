@@ -9,6 +9,9 @@ import ProfilePage from "./pages/Profile";
 import FavoritesPage from "./pages/Favourite";
 import SettingsPage from "./pages/Settings";
 import CartPage from "./pages/Card";
+import ContactPage from "./pages/Contact";
+import TermsPage from "./pages/Terms";
+import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 import ProductDetailsPage from "./pages/ProductDetails";
 import ScrollToTop from "./components/ScrollTop/ScrollTop";
 import NotFound from "./pages/NotFound";
@@ -54,6 +57,12 @@ function App() {
           <Route path="/dashboard/events" element={<UserActivityPage />} />
 
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route path="/contact" element={<ContactPage />} />
+
+          <Route path="/terms" element={<TermsPage />} />
+
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/auth/apple/callback" element={<AppleCallback />} />

@@ -8,8 +8,8 @@
 /*  Top Grid  */
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr;
-  gap: 48px;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: 36px;
   padding-bottom: 56px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -103,7 +103,6 @@
 .footer-socials a:hover {
   color: var(--gold);
 }
-
 
 @media (max-width: 768px) {
   .footer {

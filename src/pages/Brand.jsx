@@ -48,6 +48,8 @@ async function fetchBrands() {
 
   const res = await fetch(`${API_BASE_URL}/brand`, { headers });
   const json = await res.json();
+  console.log("brands raw:", json.data);
+
   if (!json.success)
     throw new Error(json.message || "The brands could not be acquired.");
   return json.data || [];
@@ -275,6 +277,7 @@ function BrandPage() {
   // Brands infinity cache
   const {
     data: allBrands = [],
+    isLoading: brandsLoading,
     isError: brandsError,
     error: brandsErr,
   } = useQuery({
@@ -282,11 +285,13 @@ function BrandPage() {
     queryFn: fetchBrands,
     staleTime: Infinity,
     gcTime: Infinity,
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 
   //Categories infinity cache
   const {
     data: allCategories = [],
+    isLoading: categoriesLoading,
     isError: categoriesError,
     error: categoriesErr,
   } = useQuery({
@@ -294,6 +299,7 @@ function BrandPage() {
     queryFn: fetchCategories,
     staleTime: Infinity,
     gcTime: Infinity,
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 
   // Products caching
@@ -341,7 +347,8 @@ function BrandPage() {
       (productsErr?.message || "Products could not be fetched.")) ||
     (!productsLoading && !productsError && !brand ? "Brand not found." : null);
 
-  const loading = productsLoading && !productData;
+  const loading =
+    brandsLoading || categoriesLoading || (productsLoading && !productData);
 
   return (
     <div className="bp-layout">

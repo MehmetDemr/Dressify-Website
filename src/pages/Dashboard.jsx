@@ -1,9 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
 import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
 import "../styles/Dashboard.css";
 
+//  Cache settings
+const LIMIT = 24;
+const STALE_TIME = 1000 * 60 * 5; // it counts fresh 5 minutes
+const CACHE_TIME = 1000 * 60 * 30; // stored in cache 30 minutes
+
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+async function fetchProducts(page) {
+  const res = await fetch(
+    `${API_BASE_URL}/product?page=${page}&limit=${LIMIT}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    },
+  );
+  const json = await res.json();
+  if (!res.ok || !json.success)
+    throw new Error(json.message || "Products could not be fetched.");
+  return json;
+}
+
+async function fetchBrands() {
+  const res = await fetch(`${API_BASE_URL}/brand`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success)
+    throw new Error(json.message || "Brands could not be fetched.");
+  return json;
+}
+
+async function fetchCategories() {
+  const res = await fetch(`${API_BASE_URL}/category`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success)
+    throw new Error(json.message || "Categories could not be fetched.");
+  return json;
+}
+
+//Pagination
 function Pagination({
   currentPage,
   totalPages,
@@ -82,19 +135,15 @@ function Pagination({
   );
 }
 
+//  ProductCard
 function ProductCard({ product, categories, brands }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
   const [isLiking, setIsLiking] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
   const brandName = product.category?.brand?.brandName || "Dressify";
   const categoryName = product.category?.categoryName || "Category";
-
-  useEffect(() => {
-    setLiked(!!product.isFavourite);
-    setFavouriteId(product.favouriteId || null);
-  }, [product.isFavourite, product.favouriteId]);
-
   const imageUrl =
     product.imageUrl || product.image || product.thumbnail || null;
   const productTitle = product.productName || product.name || "Unnamed Product";
@@ -104,13 +153,11 @@ function ProductCard({ product, categories, brands }) {
     : false;
 
   const matchedCategory = categories.find(
-    (category) => String(category.id) === String(product.category_id),
+    (c) => String(c.id) === String(product.category_id),
   );
-
   const matchedBrand = brands.find(
-    (brand) => String(brand.id) === String(matchedCategory?.brand_id),
+    (b) => String(b.id) === String(matchedCategory?.brand_id),
   );
-
   const detailUrl =
     matchedBrand?.brandSlug &&
     matchedCategory?.categorySlug &&
@@ -121,8 +168,7 @@ function ProductCard({ product, categories, brands }) {
   const handleLike = async (e) => {
     e.preventDefault();
     if (isLiking) return;
-
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) {
       alert("You must log in to add to favorites.");
       return;
@@ -130,7 +176,6 @@ function ProductCard({ product, categories, brands }) {
 
     try {
       setIsLiking(true);
-
       let response;
 
       if (liked && favouriteId) {
@@ -171,9 +216,7 @@ function ProductCard({ product, categories, brands }) {
       }
 
       if (!response) return;
-
       const data = await response.json();
-
       if (response.ok && data.success) {
         setLiked(data.isFavourite ?? !liked);
         setFavouriteId(data.isFavourite ? data.favouriteId || null : null);
@@ -190,8 +233,7 @@ function ProductCard({ product, categories, brands }) {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     if (isAddingToCart) return;
-
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) {
       alert("You must log in to add to your cart.");
       return;
@@ -199,25 +241,18 @@ function ProductCard({ product, categories, brands }) {
 
     try {
       setIsAddingToCart(true);
-
       const response = await fetch(`${API_BASE_URL}/card`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          product_id: product.id,
-          quantity: 1,
-        }),
+        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
       });
-
       const data = await response.json();
-
       if (response.ok && data.success) {
         alert("Product added to cart.");
       } else {
-        console.error("Add to card failed:", data.message);
         alert(data.message || "The product could not be added to the cart.");
       }
     } catch (error) {
@@ -268,7 +303,6 @@ function ProductCard({ product, categories, brands }) {
           </svg>
         </button>
 
-        {/* Desktop add card button */}
         <button
           type="button"
           className="product-add-cart product-add-cart--desktop"
@@ -289,11 +323,10 @@ function ProductCard({ product, categories, brands }) {
           <span className="product-price">
             {product.price != null
               ? `${Number(product.price).toLocaleString("tr-TR")}₺`
-              : "—"}
+              : ""}
           </span>
         </div>
 
-        {/* Mobile add card button */}
         <button
           type="button"
           className="product-add-cart product-add-cart--mobile"
@@ -342,91 +375,67 @@ function ProductCardSkeleton() {
   );
 }
 
+//  Dashboard
 function Dashboard() {
-  const [products, setProducts] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    totalPages: 1,
-    totalItems: 0,
+  const queryClient = useQueryClient();
+
+  // Products
+  const {
+    data: productData,
+    isLoading: productsLoading,
+    isError: productsError,
+    error: productErr,
+    isFetching,
+  } = useQuery({
+    queryKey: ["products", page],
+    queryFn: () => fetchProducts(page),
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME, // v5: cacheTime → gcTime
+    placeholderData: (prev) => prev, //send older data while changing pages.
   });
 
-  const LIMIT = 24;
+  // Brands infinity cache
+  const { data: brandData } = useQuery({
+    queryKey: ["brands"],
+    queryFn: fetchBrands,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        setError(null);
+  // Categories infinitiy cache
+  const { data: categoryData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
-        const token = localStorage.getItem("token");
-
-        const [productRes, brandRes, categoryRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/product?page=${page}&limit=${LIMIT}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch(`${API_BASE_URL}/brand`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch(`${API_BASE_URL}/category`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ]);
-
-        const [productJson, brandJson, categoryJson] = await Promise.all([
-          productRes.json(),
-          brandRes.json(),
-          categoryRes.json(),
-        ]);
-
-        if (!productRes.ok || !productJson.success) {
-          throw new Error(
-            productJson.message || "Products could not be fetched.",
-          );
-        }
-
-        if (!brandRes.ok || !brandJson.success) {
-          throw new Error(brandJson.message || "Brands could not be fetched.");
-        }
-
-        if (!categoryRes.ok || !categoryJson.success) {
-          throw new Error(
-            categoryJson.message || "Categories could not be fetched.",
-          );
-        }
-
-        setProducts(productJson.data || []);
-        setPagination({
-          totalPages: productJson.totalPages || 1,
-          totalItems: productJson.totalItems || 0,
-        });
-        setBrands(brandJson.data || []);
-        setCategories(categoryJson.data || []);
-      } catch (err) {
-        setError(err.message || "An error occurred.");
-      } finally {
-        setLoading(false);
-      }
+  // prefetch
+  const prefetchNextPage = () => {
+    const totalPages = productData?.totalPages || 1;
+    if (page < totalPages) {
+      queryClient.prefetchQuery({
+        queryKey: ["products", page + 1],
+        queryFn: () => fetchProducts(page + 1),
+        staleTime: STALE_TIME,
+      });
     }
+  };
 
-    fetchData();
-  }, [page]);
+  const products = productData?.data || [];
+  const brands = brandData?.data || [];
+  const categories = categoryData?.data || [];
+  const pagination = {
+    totalPages: productData?.totalPages || 1,
+    totalItems: productData?.totalItems || 0,
+  };
+
+  const loading = productsLoading;
+  const error = productsError
+    ? productErr?.message || "An error occurred."
+    : null;
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -453,7 +462,7 @@ function Dashboard() {
       <main className="dash-main">
         <div className="dash-hero">
           <div className="dash-hero-text">
-            <p className="dash-hero-eyebrow">New Season — 2026</p>
+            <p className="dash-hero-eyebrow">New Season 2026</p>
             <h1 className="dash-hero-title">New Products</h1>
           </div>
 
@@ -472,9 +481,15 @@ function Dashboard() {
           )}
         </div>
 
+        {isFetching && !loading && (
+          <div className="dash-refetch-indicator" aria-label="Refreshing...">
+            ↻
+          </div>
+        )}
+
         {error && (
           <div className="dash-error">
-            <p>Products could not be loaded : {error}</p>
+            <p>Products could not be loaded: {error}</p>
             <button onClick={() => window.location.reload()}>Try Again</button>
           </div>
         )}
@@ -510,7 +525,10 @@ function Dashboard() {
             totalPages={pagination.totalPages}
             totalItems={pagination.totalItems}
             perPage={LIMIT}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              prefetchNextPage();
+            }}
           />
         )}
       </main>

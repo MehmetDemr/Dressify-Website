@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import logo from "../../../assets/dressify-logo.png";
 import { API_BASE_URL } from "../../../../config";
 import "./Header.css";
@@ -21,10 +22,10 @@ function DashboardHeader() {
   const [pinnedDropdown, setPinnedDropdown] = useState(null);
   const [mobileExpanded, setMobileExpanded] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const queryClient = useQueryClient();
 
   const closeTimerRef = useRef(null);
   const navRef = useRef(null);
-
 
   function clearCloseTimer() {
     if (closeTimerRef.current) {
@@ -94,9 +95,7 @@ function DashboardHeader() {
   useEffect(() => {
     async function fetchNavData() {
       try {
-        const [brandRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/brand`),
-        ]);
+        const [brandRes] = await Promise.all([fetch(`${API_BASE_URL}/brand`)]);
         const brandJson = await brandRes.json();
         if (brandJson.success) setBrands(brandJson.data);
       } catch (err) {
@@ -130,6 +129,10 @@ function DashboardHeader() {
   }, []);
 
   const handleLogout = () => {
+    queryClient.removeQueries({ queryKey: ["products"] });
+    queryClient.removeQueries({ queryKey: ["brandProducts"] });
+    queryClient.removeQueries({ queryKey: ["brands"] });
+    queryClient.removeQueries({ queryKey: ["categories"] });
     setUser(null);
     localStorage.removeItem("token");
     window.location.href = "/";

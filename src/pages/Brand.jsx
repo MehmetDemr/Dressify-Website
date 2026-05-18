@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import DashboardHeader from "../components/Dashboard/dashboard-header/Header";
 import DashboardFooter from "../components/Dashboard/dashboard-footer/Footer";
 import { API_BASE_URL } from "../../config";
@@ -32,21 +33,63 @@ function getLastSlugPart(slug) {
   return String(slug).split("/").filter(Boolean).pop();
 }
 
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+//Cache settings
+const STALE_TIME = 1000 * 60 * 5; // it counts fresh 5 minutes
+const CACHE_TIME = 1000 * 60 * 30; // stored in cache 30 minutes
+
+async function fetchBrands() {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE_URL}/brand`, { headers });
+  const json = await res.json();
+  if (!json.success)
+    throw new Error(json.message || "The brands could not be acquired.");
+  return json.data || [];
+}
+
+async function fetchCategories() {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE_URL}/category`, { headers });
+  const json = await res.json();
+  if (!json.success)
+    throw new Error(json.message || "The categories could not be acquired.");
+  return json.data || [];
+}
+
+async function fetchBrandProducts({ brandSlug, page, limit }) {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(
+    `${API_BASE_URL}/product?brandSlug=${brandSlug}&limit=${limit}&page=${page}`,
+    { headers },
+  );
+  const json = await res.json();
+  if (!json.success)
+    throw new Error(json.message || "The products could not be received.");
+  return json;
+}
+
 function BrandProductCard({ product, brand, categories }) {
   const [liked, setLiked] = useState(!!product.isFavourite);
   const [favouriteId, setFavouriteId] = useState(product.favouriteId || null);
   const [isLiking, setIsLiking] = useState(false);
 
-  useEffect(() => {
-    setLiked(!!product.isFavourite);
-    setFavouriteId(product.favouriteId || null);
-  }, [product.isFavourite, product.favouriteId]);
-
   const handleLike = async (e) => {
     e.preventDefault();
     if (isLiking) return;
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) {
       alert("You must log in to add to favorites.");
       return;
@@ -225,104 +268,80 @@ function BrandCardSkeleton() {
 
 function BrandPage() {
   const { brandSlug } = useParams();
-
-  const [brand, setBrand] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [page, setPage] = useState(1);
   const LIMIT = 32;
-  const [totalPages, setTotalPages] = useState(1);
+
+  // Brands infinity cache
+  const {
+    data: allBrands = [],
+    isError: brandsError,
+    error: brandsErr,
+  } = useQuery({
+    queryKey: ["brands"],
+    queryFn: fetchBrands,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  //Categories infinity cache
+  const {
+    data: allCategories = [],
+    isError: categoriesError,
+    error: categoriesErr,
+  } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  // Products caching
+  const {
+    data: productData,
+    isLoading: productsLoading,
+    isError: productsError,
+    error: productsErr,
+    isFetching,
+  } = useQuery({
+    queryKey: ["brandProducts", brandSlug, page],
+    queryFn: () => fetchBrandProducts({ brandSlug, page, limit: LIMIT }),
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    placeholderData: (prev) => prev,
+  });
+
+  const brand =
+    allBrands.find((b) => String(b.brandSlug) === String(brandSlug)) || null;
+
+  const brandCategories = allCategories.filter(
+    (cat) => brand && String(getCategoryBrandId(cat)) === String(brand.id),
+  );
+
+  const allProducts = productData?.data || [];
+  const totalPages = productData?.totalPages || 1;
+
+  const brandCategoryIds = new Set(brandCategories.map((c) => String(c.id)));
+  const brandProducts = allProducts.filter((p) =>
+    brandCategoryIds.has(String(getProductCategoryId(p))),
+  );
 
   const filteredProducts =
     activeCategory === "all"
-      ? products
-      : products.filter(
+      ? brandProducts
+      : brandProducts.filter(
           (p) => String(getProductCategoryId(p)) === String(activeCategory),
         );
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        setError(null);
+  const error =
+    (brandsError && (brandsErr?.message || "Brands could not be fetched.")) ||
+    (categoriesError &&
+      (categoriesErr?.message || "Categories could not be fetched.")) ||
+    (productsError &&
+      (productsErr?.message || "Products could not be fetched.")) ||
+    (!productsLoading && !productsError && !brand ? "Brand not found." : null);
 
-        const token = localStorage.getItem("token");
-        const headers = { "Content-Type": "application/json" };
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        const [brandRes, categoryRes, productRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/brand`, { headers }),
-          fetch(`${API_BASE_URL}/category`, { headers }),
-          fetch(
-            `${API_BASE_URL}/product?brandSlug=${brandSlug}&limit=${LIMIT}&page=${page}`,
-            {
-              headers,
-            },
-          ),
-        ]);
-
-        const [brandJson, categoryJson, productJson] = await Promise.all([
-          brandRes.json(),
-          categoryRes.json(),
-          productRes.json(),
-        ]);
-
-        if (!brandJson.success)
-          throw new Error(
-            brandJson.message || "The brands could not be acquired.",
-          );
-        if (!categoryJson.success)
-          throw new Error(
-            categoryJson.message || "The categories could not be acquired.",
-          );
-        if (!productJson.success)
-          throw new Error(
-            productJson.message || "The products could not be received.",
-          );
-
-        setTotalPages(productJson.totalPages);
-
-
-
-        const allBrands = brandJson.data || [];
-        const allCategories = categoryJson.data || [];
-        const allProducts = productJson.data || [];
-
-        const foundBrand = allBrands.find(
-          (b) => String(b.brandSlug) === String(brandSlug),
-        );
-        if (!foundBrand) throw new Error("Brand not found.");
-
-        setBrand(foundBrand);
-
-        const brandCategories = allCategories.filter(
-          (category) =>
-            String(getCategoryBrandId(category)) === String(foundBrand.id),
-        );
-        setCategories(brandCategories);
-
-        const brandCategoryIds = new Set(
-          brandCategories.map((category) => String(category.id)),
-        );
-
-        const brandProducts = allProducts.filter((product) =>
-          brandCategoryIds.has(String(getProductCategoryId(product))),
-        );
-
-        setProducts(brandProducts);
-      } catch (err) {
-        console.error("Brand page error:", err);
-        setError(err.message || "An error occurred.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [brandSlug]);
+  const loading = productsLoading && !productData;
 
   return (
     <div className="bp-layout">
@@ -339,15 +358,10 @@ function BrandPage() {
               <p className="bp-hero-sub">
                 {filteredProducts.length} product
                 {activeCategory !== "all" &&
-                categories.find(
-                  (category) => String(category.id) === String(activeCategory),
+                brandCategories.find(
+                  (c) => String(c.id) === String(activeCategory),
                 )
-                  ? ` — ${
-                      categories.find(
-                        (category) =>
-                          String(category.id) === String(activeCategory),
-                      ).categoryName
-                    }`
+                  ? ` — ${brandCategories.find((c) => String(c.id) === String(activeCategory)).categoryName}`
                   : ""}
               </p>
             </>
@@ -364,24 +378,21 @@ function BrandPage() {
                   onClick={() => setActiveCategory("all")}
                 >
                   <span>All</span>
-                  <span className="bp-filter-count">{products.length}</span>
+                  <span className="bp-filter-count">
+                    {brandProducts.length}
+                  </span>
                 </button>
               </li>
 
-              {categories.map((cat) => {
-                const count = products.filter(
-                  (product) =>
-                    String(getProductCategoryId(product)) === String(cat.id),
+              {brandCategories.map((cat) => {
+                const count = brandProducts.filter(
+                  (p) => String(getProductCategoryId(p)) === String(cat.id),
                 ).length;
 
                 return (
                   <li key={cat.id}>
                     <button
-                      className={`bp-filter-item ${
-                        String(activeCategory) === String(cat.id)
-                          ? "active"
-                          : ""
-                      }`}
+                      className={`bp-filter-item ${String(activeCategory) === String(cat.id) ? "active" : ""}`}
                       onClick={() => setActiveCategory(cat.id)}
                     >
                       <span>{cat.categoryName}</span>
@@ -394,6 +405,15 @@ function BrandPage() {
           </aside>
 
           <section className="bp-grid-wrap">
+            {isFetching && !loading && (
+              <div
+                className="dash-refetch-indicator"
+                aria-label="Refreshing..."
+              >
+                ↻
+              </div>
+            )}
+
             {error && (
               <div className="bp-error">
                 <p>{error}</p>
@@ -419,7 +439,7 @@ function BrandPage() {
                       key={product.id}
                       product={product}
                       brand={brand}
-                      categories={categories}
+                      categories={brandCategories}
                     />
                   ))
                 ) : (
@@ -427,6 +447,39 @@ function BrandPage() {
                     No products were found in this category.
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && !error && totalPages > 1 && (
+              <div className="dash-pagination">
+                <div className="dash-pg-controls">
+                  <button
+                    className="dash-pg-btn dash-pg-arrow"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    ‹
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (p) => (
+                      <button
+                        key={p}
+                        className={`dash-pg-btn ${p === page ? "active" : ""}`}
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    className="dash-pg-btn dash-pg-arrow"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
             )}
           </section>
